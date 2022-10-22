@@ -7,6 +7,8 @@
 #include <omp.h>
 #endif
 
+//Implementing the recursive ray-tracer 
+//Source: Chapter 4.8, Fundamentals of Computer Graphics, Fourth Edition.
 glm::vec3 getFinalColor(const Scene& scene, const BvhInterface& bvh, Ray ray, const Features& features, int rayDepth)
 {
     HitInfo hitInfo;
@@ -16,12 +18,14 @@ glm::vec3 getFinalColor(const Scene& scene, const BvhInterface& bvh, Ray ray, co
 
         if (features.enableRecursive) {
             Ray reflection = computeReflectionRay(ray, hitInfo);
-            // TODO: put your own implementation of recursive ray tracing here.
+            if (rayDepth < 10 && hitInfo.material.ks != glm::vec3{ 0.0f }) {
+                Lo += hitInfo.material.ks * getFinalColor(scene, bvh, reflection, features, rayDepth + 1);
+            }
         }
 
-        // Draw a white debug ray if the ray hits.
-        drawRay(ray, glm::vec3(1.0f));
-
+        // Visual Debug: Draw a ray with a color which is the returned value from computeLightContribution
+        drawRay(ray, Lo);
+  
         // Set the color of the pixel to white if the ray hits.
         return Lo;
     } else {
