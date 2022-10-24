@@ -78,8 +78,22 @@ bool BoundingVolumeHierarchy::intersect(Ray& ray, HitInfo& hitInfo, const Featur
                 const auto v1 = mesh.vertices[tri[1]];
                 const auto v2 = mesh.vertices[tri[2]];
                 if (intersectRayWithTriangle(v0.position, v1.position, v2.position, ray, hitInfo)) {
+
+                    hitInfo.vertices = { v0, v1, v2 }; //store the vertices in hitInfo 
+                    
+                    hitInfo.barycentricCoord = computeBarycentricCoord(v0.position,
+                        v1.position, v2.position, ray.origin + ray.t * ray.direction); //update the barycentric coordinate of hitInfo
+                    hitInfo.texCoord = interpolateTexCoord(v0.texCoord, v1.texCoord,  //update the texture coordinate of hitInfo
+                        v2.texCoord, hitInfo.barycentricCoord);
+                    
+                    //if the normal interpolation flag enables, we update the normal of hitInfo equal to the interpolated normal. If not, we compute the cross product of vector v0->v1 and v0->v2
+                    if (features.enableNormalInterp) {
+                        hitInfo.normal = interpolateNormal(v0.normal, v1.normal, v2.normal, hitInfo.barycentricCoord);
+                    } else {
+                        hitInfo.normal = glm::normalize(glm::cross(v1.position - v0.position, v2.position - v0.position));
+                    }
+
                     hitInfo.material = mesh.material;
-                    hitInfo.normal = glm::normalize(glm::cross(v1.position - v0.position, v2.position - v0.position));
                     hit = true;
                 }
             }

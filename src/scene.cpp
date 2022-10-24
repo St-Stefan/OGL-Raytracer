@@ -79,7 +79,7 @@ Scene loadScenePrebuilt(SceneType type, const std::filesystem::path& dataDir)
     } break;
     case Custom: {
         // === Replace custom.obj by your own 3D model (or call your 3D model custom.obj) ===
-        auto subMeshes = loadMesh(dataDir / "custom.obj");
+        auto subMeshes = loadMesh(dataDir / "quad_textured.obj"); // I change this custom.obj to quad_textured.obj to serve for visual debug of texture mapping
         std::move(std::begin(subMeshes), std::end(subMeshes), std::back_inserter(scene.meshes));
         // === CHANGE THE LIGHTING IF DESIRED ===
         scene.lights.emplace_back(PointLight { glm::vec3(-1, 1, -1), glm::vec3(1) });
