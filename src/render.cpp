@@ -22,6 +22,16 @@ glm::vec3 getFinalColor(const Scene& scene, const BvhInterface& bvh, Ray ray, co
                 Lo += hitInfo.material.ks * getFinalColor(scene, bvh, reflection, features, rayDepth + 1);
             }
         }
+        //if normal interpolation flag enables, we draw normal at 3 vertices and the interpolated normal.    
+        if (features.enableNormalInterp) {
+            drawRay(Ray { hitInfo.vertices[0].position, hitInfo.vertices[0].normal, 2 }, glm::vec3 { 1.0f, 0.0f, 0.0f });
+            drawRay(Ray { hitInfo.vertices[1].position, hitInfo.vertices[1].normal, 2 }, glm::vec3 { 1.0f, 0.0f, 0.0f });
+            drawRay(Ray { hitInfo.vertices[2].position, hitInfo.vertices[2].normal, 2 }, glm::vec3 { 1.0f, 0.0f, 0.0f });
+            drawRay(Ray { ray.origin + ray.t * ray.direction,
+                      hitInfo.normal, 2 },
+             glm::vec3 { 0.0f, 1.0f, 0.0f });
+        }
+
 
         // Visual Debug: Draw a ray with a color which is the returned value from computeLightContribution
         drawRay(ray, Lo);
