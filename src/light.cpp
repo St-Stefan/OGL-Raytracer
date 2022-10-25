@@ -30,8 +30,32 @@ void sampleParallelogramLight(const ParallelogramLight& parallelogramLight, glm:
 // returns 1.0 if sample is visible, 0.0 otherwise
 float testVisibilityLightSample(const glm::vec3& samplePos, const glm::vec3& debugColor, const BvhInterface& bvh, const Features& features, Ray ray, HitInfo hitInfo)
 {
-    // TODO: implement this function.
-    return 1.0;
+    float offset = 0.001;
+    glm::vec3 intersectionPoint = ray.origin + ray.direction * ray.t;
+    glm::vec3 rayDir = samplePos - intersectionPoint;
+    Ray lightTest {glm::normalize(rayDir),intersectionPoint};
+    lightTest.direction = glm::normalize(rayDir);
+    lightTest.origin = intersectionPoint+offset*lightTest.direction;
+    lightTest.t = glm::length(rayDir);
+    HitInfo lightHitInfo;
+    float shadow = false;
+
+    if (dot(hitInfo.normal, lightTest.direction) * dot(hitInfo.normal, -ray.direction)<0)
+        shadow = true;
+
+    if (bvh.intersect(lightTest, lightHitInfo, features)) {
+        if (lightTest.t < glm::length(rayDir) - offset)
+        shadow = true;
+    }
+
+    if (shadow) {
+        drawRay(lightTest, debugColor);
+        return 0.0;
+    }
+    else {
+        drawRay(lightTest, debugColor);
+            return 1.0;
+    }
 }
 
 // given an intersection, computes the contribution from all light sources at the intersection point
@@ -75,7 +99,9 @@ glm::vec3 computeLightContribution(const Scene& scene, const BvhInterface& bvh, 
         for (const auto& light : scene.lights) {
             if (std::holds_alternative<PointLight>(light)) {
                 const PointLight pointLight = std::get<PointLight>(light);
-                lightContribution += computeShading(pointLight.position, pointLight.color, features, ray, hitInfo);
+                if (testVisibilityLightSample(pointLight.position,glm::vec3(0,0,1),bvh,features,ray,hitInfo)){
+                    lightContribution += computeShading(pointLight.position, pointLight.color, features, ray, hitInfo);
+                    }
             }
         }
         return lightContribution;
