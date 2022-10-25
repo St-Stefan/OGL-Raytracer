@@ -26,10 +26,20 @@ const glm::vec3 computeShading(const glm::vec3& lightPosition, const glm::vec3& 
                     * acquireTexel(*hitInfo.material.kdTexture.get(), hitInfo.texCoord, features) // Based on the book Fundamentals of Computer Graphics, chapter 11.1
                                                                                                   //, we will replace the value Kd = acquireTexel(...)  
                     * glm::dot(normal, directionOfIncomingRay);
-            } else {
+            } 
+                
+
+            else if (features.extra.enableBilinearTextureFiltering) {
+                diffuseTerm = lightColor
+                    * bilinearInterpolation(*hitInfo.material.kdTexture.get(), hitInfo.texCoord, features)
+                    *glm::dot(normal, directionOfIncomingRay); 
+            }
+
+            else {
                 diffuseTerm = lightColor
                     * hitInfo.material.kd
                     * glm::dot(normal, directionOfIncomingRay);
+            
             }
         }
 
