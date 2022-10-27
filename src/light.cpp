@@ -30,7 +30,8 @@ void sampleParallelogramLight(const ParallelogramLight& parallelogramLight, glm:
 // returns 1.0 if sample is visible, 0.0 otherwise
 float testVisibilityLightSample(const glm::vec3& samplePos, const glm::vec3& debugColor, const BvhInterface& bvh, const Features& features, Ray ray, HitInfo hitInfo)
 {
-    float offset = 0.001;
+
+    float offset = 0.001; //removes shadow acne
     glm::vec3 intersectionPoint = ray.origin + ray.direction * ray.t;
     glm::vec3 rayDir = samplePos - intersectionPoint;
     Ray lightTest {glm::normalize(rayDir),intersectionPoint};
@@ -40,20 +41,20 @@ float testVisibilityLightSample(const glm::vec3& samplePos, const glm::vec3& deb
     HitInfo lightHitInfo;
     float shadow = false;
 
-    if (dot(hitInfo.normal, lightTest.direction) * dot(hitInfo.normal, -ray.direction)<0)
+    if (dot(hitInfo.normal, lightTest.direction) * dot(hitInfo.normal, -ray.direction)<0)   //check if view ray and shadow ray are on the same side
         shadow = true;
 
-    if (bvh.intersect(lightTest, lightHitInfo, features)) {
-        if (lightTest.t < glm::length(rayDir) - offset)
+    if (bvh.intersect(lightTest, lightHitInfo, features)) {     //if there is an intersection regard point as in shadow
+        if (lightTest.t < glm::length(rayDir) - offset)         //subtract the offset from the final length
         shadow = true;
     }
 
     if (shadow) {
-        drawRay(lightTest, debugColor);
+        drawRay(lightTest, debugColor);     //if in shadow ray is shown in chosen colour
         return 0.0;
     }
     else {
-        drawRay(lightTest, debugColor);
+        drawRay(lightTest, glm::vec3(0, 0, 1)); // otherwise shade as yellow
             return 1.0;
     }
 }
@@ -97,9 +98,10 @@ glm::vec3 computeLightContribution(const Scene& scene, const BvhInterface& bvh, 
     if (features.enableShading) {
         // If shading is enabled, compute the contribution from all lights.
         for (const auto& light : scene.lights) {
+            //only calculate shadows when flag is set to true
             if (std::holds_alternative<PointLight>(light)) {
                 const PointLight pointLight = std::get<PointLight>(light);
-                if (testVisibilityLightSample(pointLight.position,glm::vec3(0,0,1),bvh,features,ray,hitInfo)){
+                if (testVisibilityLightSample(pointLight.position, glm::vec3(0, 0, 1), bvh, features, ray, hitInfo) && features.enableHardShadow || !features.enableHardShadow) {
                     lightContribution += computeShading(pointLight.position, pointLight.color, features, ray, hitInfo);
                     }
             }
