@@ -28,10 +28,12 @@ void sampleSegmentLight(const SegmentLight& segmentLight, glm::vec3& position, g
     tes.t = sampleJitter;
     drawRay(tes,glm::vec3(1,1,0));
     
+    
 
     position = samplepoint;
     color = glm::vec3(0.0);
-    color = segmentLight.color0;
+    if (point1 != point2)
+        color = (length - sampleJitter) / length * segmentLight.color0 + (sampleJitter) / length * segmentLight.color1;
     // TODO: implement this function.
 }
 
@@ -39,8 +41,22 @@ void sampleSegmentLight(const SegmentLight& segmentLight, glm::vec3& position, g
 // you should fill in the vectors position and color with the sampled position and color
 void sampleParallelogramLight(const ParallelogramLight& parallelogramLight, glm::vec3& position, glm::vec3& color)
 {
-    position = glm::vec3(0.0);
-    color = glm::vec3(0.0);
+    float length1 = glm::length(parallelogramLight.edge01);
+    float sampleJitter1 = (float)rand() / (float)(RAND_MAX / length1);
+
+    float length2 = glm::length(parallelogramLight.edge02);
+    float sampleJitter2 = (float)rand() / (float)(RAND_MAX / length2);
+
+    glm::vec3 samplePoint = parallelogramLight.v0 + glm::normalize(parallelogramLight.edge01) * sampleJitter1 + glm::normalize(parallelogramLight.edge02)*sampleJitter2;
+
+    position = samplePoint;
+    float coef1 = ((length1 - sampleJitter1) * (length2 - sampleJitter2)) / (length1 * length2);
+    float coef2 = ((length1 - sampleJitter1) * (sampleJitter2)) / (length1 * length2);
+    float coef3 = ((sampleJitter1) * (length2 - sampleJitter2)) / (length1 * length2);
+    float coef4 = ((sampleJitter1) * (sampleJitter2)) / (length1 * length2);
+   
+
+    color = parallelogramLight.color0*coef1+parallelogramLight.color1*coef3+parallelogramLight.color2*coef2+parallelogramLight.color3*coef4;
     // TODO: implement this function.
 }
 
@@ -68,11 +84,11 @@ float testVisibilityLightSample(const glm::vec3& samplePos, const glm::vec3& deb
     }
 
     if (shadow) {
-        drawRay(lightTest, debugColor);     //if in shadow ray is shown in chosen colour
+        drawRay(lightTest, glm::vec3(0, 0, 1)); // show shadow ray in blue
         return 0.0;
     }
     else {
-        drawRay(lightTest, glm::vec3(0, 0, 1)); // otherwise shade as yellow
+        drawRay(lightTest, debugColor); // otherwise shade ray the same color as the light
             return 1.0;
     }
 }
@@ -112,7 +128,7 @@ float testVisibilityLightSample(const glm::vec3& samplePos, const glm::vec3& deb
 // loadScene function in scene.cpp). Custom lights will not be visible in rasterization view.
 glm::vec3 computeLightContribution(const Scene& scene, const BvhInterface& bvh, const Features& features, Ray ray, HitInfo hitInfo)
 {
-    int samplecount=50;
+    int samplecount=250;
     glm::vec3 lightContribution {0.0f};
     if (features.enableShading) {
         // If shading is enabled, compute the contribution from all lights.
@@ -130,14 +146,27 @@ glm::vec3 computeLightContribution(const Scene& scene, const BvhInterface& bvh, 
                     glm::vec3 positi = { 0, 0, 0 };
                     glm::vec3 color = { 0, 0, 0 };
                     sampleSegmentLight(segmentLight, positi, color);
-                    if (testVisibilityLightSample(positi, glm::vec3(0, 0, 1), bvh, features, ray, hitInfo)) {
+                    if (testVisibilityLightSample(positi, glm::vec3(0, 0, 1), bvh, features, ray, hitInfo) && features.enableSoftShadow || !features.enableSoftShadow) {
                         segmentLightContribution += computeShading(positi, color, features, ray, hitInfo);
                     }
                     }
                 segmentLightContribution = segmentLightContribution / float(samplecount);
                 lightContribution += segmentLightContribution;
 
+                } else if (std::holds_alternative<ParallelogramLight>(light)) {
+                const ParallelogramLight parallelogramLight = std::get<ParallelogramLight>(light);
+                glm::vec3 pLightContribution { 0, 0, 0 };
+                for (int i = 0; i < samplecount; i++) {
+                    glm::vec3 positi = { 0, 0, 0 };
+                    glm::vec3 color = { 0, 0, 0 };
+                    sampleParallelogramLight(parallelogramLight, positi, color);
+                    if (testVisibilityLightSample(positi, color, bvh, features, ray, hitInfo) && features.enableSoftShadow || !features.enableSoftShadow) {
+                        pLightContribution += computeShading(positi, color, features, ray, hitInfo);
+                    }
                 }
+                pLightContribution = pLightContribution / float(samplecount);
+                lightContribution += pLightContribution;
+            }
         }
         return lightContribution;
 
