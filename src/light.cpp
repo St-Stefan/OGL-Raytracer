@@ -12,8 +12,26 @@ DISABLE_WARNINGS_POP()
 // you should fill in the vectors position and color with the sampled position and color
 void sampleSegmentLight(const SegmentLight& segmentLight, glm::vec3& position, glm::vec3& color)
 {
-    position = glm::vec3(0.0);
+    glm::vec3 point1 = segmentLight.endpoint0;
+    glm::vec3 point2 = segmentLight.endpoint1;
+
+    glm::vec3 lightVector = point2 - point1;
+
+    float length = glm::length(lightVector);
+    float sampleJitter = (float)rand() / (float)(RAND_MAX / length);
+    
+    glm::vec3 samplepoint = point1 + glm::normalize(lightVector) * sampleJitter;
+
+    Ray tes;
+    tes.origin = point1;
+    tes.direction = glm::normalize(lightVector);
+    tes.t = sampleJitter;
+    drawRay(tes,glm::vec3(1,1,0));
+    
+
+    position = samplepoint;
     color = glm::vec3(0.0);
+    color = segmentLight.color0;
     // TODO: implement this function.
 }
 
@@ -94,6 +112,7 @@ float testVisibilityLightSample(const glm::vec3& samplePos, const glm::vec3& deb
 // loadScene function in scene.cpp). Custom lights will not be visible in rasterization view.
 glm::vec3 computeLightContribution(const Scene& scene, const BvhInterface& bvh, const Features& features, Ray ray, HitInfo hitInfo)
 {
+    int samplecount=50;
     glm::vec3 lightContribution {0.0f};
     if (features.enableShading) {
         // If shading is enabled, compute the contribution from all lights.
@@ -104,7 +123,21 @@ glm::vec3 computeLightContribution(const Scene& scene, const BvhInterface& bvh, 
                 if (testVisibilityLightSample(pointLight.position, glm::vec3(0, 0, 1), bvh, features, ray, hitInfo) && features.enableHardShadow || !features.enableHardShadow) {
                     lightContribution += computeShading(pointLight.position, pointLight.color, features, ray, hitInfo);
                     }
-            }
+            } else if (std::holds_alternative<SegmentLight>(light)) {
+                glm::vec3 segmentLightContribution { 0.0f };
+                const SegmentLight segmentLight = std::get<SegmentLight>(light);
+                for (int i = 0; i < samplecount; i++) {
+                    glm::vec3 positi = { 0, 0, 0 };
+                    glm::vec3 color = { 0, 0, 0 };
+                    sampleSegmentLight(segmentLight, positi, color);
+                    if (testVisibilityLightSample(positi, glm::vec3(0, 0, 1), bvh, features, ray, hitInfo)) {
+                        segmentLightContribution += computeShading(positi, color, features, ray, hitInfo);
+                    }
+                    }
+                segmentLightContribution = segmentLightContribution / float(samplecount);
+                lightContribution += segmentLightContribution;
+
+                }
         }
         return lightContribution;
 
