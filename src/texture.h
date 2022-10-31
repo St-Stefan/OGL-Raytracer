@@ -15,4 +15,4 @@ struct Image;
 glm::vec3 acquireTexel(const Image& image, const glm::vec2& texCoord, const Features& features);
 
 glm::vec3 environmentMapping(const std::vector<Image>& images, const HitInfo& hitInfo,
-	const Ray& ray,const Features& features, bool hit);
+	const Ray& ray,const Features& features);

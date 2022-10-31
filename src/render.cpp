@@ -3,9 +3,19 @@
 #include "light.h"
 #include "screen.h"
 #include <framework/trackball.h>
+#include "texture.h"
 #ifdef NDEBUG
 #include <omp.h>
 #endif
+
+Image negx = Image("C:/Users/hp/Documents/git-vluong/final_project/data/negx.jpg");
+Image negy = Image("C:/Users/hp/Documents/git-vluong/final_project/data/negy.jpg");
+Image negz = Image("C:/Users/hp/Documents/git-vluong/final_project/data/negz.jpg");
+Image posx = Image("C:/Users/hp/Documents/git-vluong/final_project/data/posx.jpg");
+Image posy = Image("C:/Users/hp/Documents/git-vluong/final_project/data/posy.jpg");
+Image posz = Image("C:/Users/hp/Documents/git-vluong/final_project/data/posz.jpg");
+
+std::vector<Image> image = { posx, negx, posy, negy, posz, negz };
 
 //Implementing the recursive ray-tracer 
 //Source: Chapter 4.8, Fundamentals of Computer Graphics, Fourth Edition.
@@ -14,10 +24,14 @@ glm::vec3 getFinalColor(const Scene& scene, const BvhInterface& bvh, Ray ray, co
     HitInfo hitInfo;
     if (bvh.intersect(ray, hitInfo, features)) {
 
+        Ray reflection = computeReflectionRay(ray, hitInfo);
+        if (features.extra.enableEnvironmentMapping) {
+            hitInfo.material.kd = environmentMapping(image, hitInfo, reflection, features);
+        }
+
         glm::vec3 Lo = computeLightContribution(scene, bvh, features, ray, hitInfo);
 
         if (features.enableRecursive) {
-            Ray reflection = computeReflectionRay(ray, hitInfo);
             if (rayDepth < 10 && hitInfo.material.ks != glm::vec3{ 0.0f }) {
                 Lo += hitInfo.material.ks * getFinalColor(scene, bvh, reflection, features, rayDepth + 1);
             }
@@ -32,18 +46,18 @@ glm::vec3 getFinalColor(const Scene& scene, const BvhInterface& bvh, Ray ray, co
              glm::vec3 { 0.0f, 1.0f, 0.0f });
         }*/
 
-
         // Visual Debug: Draw a ray with a color which is the returned value from computeLightContribution
         drawRay(ray, Lo);
-  
         // Set the color of the pixel to white if the ray hits.
         return Lo;
+
     } else {
         // Draw a red debug ray if the ray missed.
         drawRay(ray, glm::vec3(1.0f, 0.0f, 0.0f));
         // Set the color of the pixel to black if the ray misses.
         if (features.extra.enableEnvironmentMapping) {
-            return computeLightContribution(scene, bvh, features, ray, hitInfo);
+
+            return environmentMapping(image, hitInfo, ray, features);
         } else {
             return glm::vec3(0.0f);
         }

@@ -7,6 +7,9 @@
 #include <glm/glm.hpp>
 
 
+
+
+
 BoundingVolumeHierarchy::BoundingVolumeHierarchy(Scene* pScene)
     : m_pScene(pScene)
 {
@@ -96,28 +99,6 @@ bool BoundingVolumeHierarchy::intersect(Ray& ray, HitInfo& hitInfo, const Featur
                     hitInfo.material = mesh.material;
                     hit = true;
                 }
-            }
-        }
-
-        
-        if (features.extra.enableEnvironmentMapping) {
-            std::vector<Image> image;
-            Image negx = Image("C:/Users/hp/Documents/git-vluong/final_project/data/negx.jpg");
-            Image negy = Image("C:/Users/hp/Documents/git-vluong/final_project/data/negy.jpg");
-            Image negz = Image("C:/Users/hp/Documents/git-vluong/final_project/data/negz.jpg");
-            Image posx = Image("C:/Users/hp/Documents/git-vluong/final_project/data/posx.jpg");
-            Image posy = Image("C:/Users/hp/Documents/git-vluong/final_project/data/posy.jpg");
-            Image posz = Image("C:/Users/hp/Documents/git-vluong/final_project/data/posz.jpg");
-            image.push_back(posx);
-            image.push_back(negx);
-            image.push_back(posy);
-            image.push_back(negy);
-            image.push_back(posz);  
-            image.push_back(negz);
-            if (hit == false) {
-                hitInfo.material.kd = environmentMapping(image, hitInfo, ray, features, hit);
-            } else {
-                hitInfo.material.kd = environmentMapping(image, hitInfo, ray, features, hit);
             }
         }
 
