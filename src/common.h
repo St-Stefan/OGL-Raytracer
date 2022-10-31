@@ -16,7 +16,7 @@ struct HitInfo {
     glm::vec3 barycentricCoord;
     glm::vec2 texCoord;
     Material material;
-    std::vector<Vertex> vertices; //This vector serves for storing 3 vertices 
+    //std::vector<Vertex> vertices; //This vector serves for storing 3 vertices 
 };
 
 struct Plane {

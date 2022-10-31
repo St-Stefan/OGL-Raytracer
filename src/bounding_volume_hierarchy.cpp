@@ -79,7 +79,7 @@ bool BoundingVolumeHierarchy::intersect(Ray& ray, HitInfo& hitInfo, const Featur
                 const auto v2 = mesh.vertices[tri[2]];
                 if (intersectRayWithTriangle(v0.position, v1.position, v2.position, ray, hitInfo)) {
 
-                    hitInfo.vertices = { v0, v1, v2 }; //store the vertices in hitInfo 
+                    //hitInfo.vertices = { v0, v1, v2 }; //store the vertices in hitInfo 
                     
                     hitInfo.barycentricCoord = computeBarycentricCoord(v0.position,
                         v1.position, v2.position, ray.origin + ray.t * ray.direction); //update the barycentric coordinate of hitInfo
@@ -98,6 +98,25 @@ bool BoundingVolumeHierarchy::intersect(Ray& ray, HitInfo& hitInfo, const Featur
                 }
             }
         }
+
+        
+   if (features.extra.enableEnvironmentMapping) {
+            std::vector<Image> image;
+            Image negx = Image("C:/Users/hp/Documents/git-vluong/final_project/data/negx.jpg");
+            Image negy = Image("C:/Users/hp/Documents/git-vluong/final_project/data/negy.jpg");
+            Image negz = Image("C:/Users/hp/Documents/git-vluong/final_project/data/negz.jpg");
+            Image posx = Image("C:/Users/hp/Documents/git-vluong/final_project/data/posx.jpg");
+            Image posy = Image("C:/Users/hp/Documents/git-vluong/final_project/data/posy.jpg");
+            Image posz = Image("C:/Users/hp/Documents/git-vluong/final_project/data/posz.jpg");
+            image.push_back(posx);
+            image.push_back(negx);
+            image.push_back(posy);
+            image.push_back(negy);
+            image.push_back(posz);
+            image.push_back(negz);
+            hitInfo.material.kd = environmentMapping(image, hitInfo, ray, features);
+        }
+
         // Intersect with spheres.
         for (const auto& sphere : m_pScene->spheres)
             hit |= intersectRayWithShape(sphere, ray, hitInfo);
