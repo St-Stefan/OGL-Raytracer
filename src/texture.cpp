@@ -20,29 +20,6 @@ glm::vec3 acquireTexel(const Image& image, const glm::vec2& texCoord, const Feat
  
 }
 
-/* std::pair<glm::vec2, int> cubeMapLookUp(glm::vec3 direction)
-{
-    glm::vec3 vAbs = glm::abs(direction);
-    float faceIndex = 0.0f;
-    float ma;
-    glm::vec2 uv;
-    if (vAbs.z >= vAbs.x && vAbs.z >= vAbs.y) {
-        faceIndex = direction.z < 0.0 ? 5.0 : 4.0;
-        ma = 0.5 / vAbs.z;
-        uv = glm::vec2(direction.z < 0.0 ? -direction.x : direction.x, -direction.y);
-    } else if (vAbs.y >= vAbs.x) {
-        faceIndex = direction.y < 0.0 ? 3.0 : 2.0;
-        ma = 0.5 / vAbs.y;
-        uv = glm::vec2(direction.x, direction.y < 0.0 ? -direction.z : direction.z);
-    } else {
-        faceIndex = direction.x < 0.0 ? 1.0 : 0.0;
-        ma = 0.5 / vAbs.x;
-        uv = glm::vec2(direction.x < 0.0 ? direction.z : -direction.z, -direction.y);
-    }
-    return { uv * ma + 0.5f, faceIndex };
-}*/
-
-
 std::pair<std::pair<float,float>, int> cubeMapLookUp(float x, float y, float z)
 {
     float absX = fabs(x);
