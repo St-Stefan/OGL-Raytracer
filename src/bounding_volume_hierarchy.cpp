@@ -100,7 +100,7 @@ bool BoundingVolumeHierarchy::intersect(Ray& ray, HitInfo& hitInfo, const Featur
         }
 
         
-   if (features.extra.enableEnvironmentMapping) {
+        if (features.extra.enableEnvironmentMapping) {
             std::vector<Image> image;
             Image negx = Image("C:/Users/hp/Documents/git-vluong/final_project/data/negx.jpg");
             Image negy = Image("C:/Users/hp/Documents/git-vluong/final_project/data/negy.jpg");
@@ -112,9 +112,13 @@ bool BoundingVolumeHierarchy::intersect(Ray& ray, HitInfo& hitInfo, const Featur
             image.push_back(negx);
             image.push_back(posy);
             image.push_back(negy);
-            image.push_back(posz);
+            image.push_back(posz);  
             image.push_back(negz);
-            hitInfo.material.kd = environmentMapping(image, hitInfo, ray, features);
+            if (hit == false) {
+                hitInfo.material.kd = environmentMapping(image, hitInfo, ray, features, hit);
+            } else {
+                hitInfo.material.kd = environmentMapping(image, hitInfo, ray, features, hit);
+            }
         }
 
         // Intersect with spheres.

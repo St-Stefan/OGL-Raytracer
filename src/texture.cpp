@@ -20,7 +20,6 @@ glm::vec3 acquireTexel(const Image& image, const glm::vec2& texCoord, const Feat
  
 }
 
-
 std::pair<glm::vec2, int> cubeMapLookUp(glm::vec3 direction)
 {
     glm::vec3 vAbs = glm::abs(direction);
@@ -43,9 +42,18 @@ std::pair<glm::vec2, int> cubeMapLookUp(glm::vec3 direction)
     return { uv * ma + 0.5f, faceIndex };
 }
 
-glm::vec3 environmentMapping(const std::vector<Image>& images,const HitInfo& hitInfo, const Ray& ray, const Features& features)
+glm::vec3 environmentMapping(const std::vector<Image>& images,const HitInfo& hitInfo,
+        const Ray& ray, const Features& features, bool hit)
 {
+ 
     Ray reflection = computeReflectionRay(ray, hitInfo);
-    std::pair<glm::vec2, int> result = cubeMapLookUp(reflection.direction);
-    return glm::vec3 { 0.0f }; // acquireTexel(images[result.second], result.first, features);
+    std::pair<glm::vec2, int> result;
+
+    if (hit == false) {
+         result = cubeMapLookUp(ray.direction);
+    } else {
+        result = cubeMapLookUp(reflection.direction);
+    }
+    
+    return acquireTexel(images[result.second], result.first, features);
 }
