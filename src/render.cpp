@@ -43,7 +43,7 @@ glm::vec3 getFinalColor(const Scene& scene, const BvhInterface& bvh, Ray ray, co
         drawRay(ray, glm::vec3(1.0f, 0.0f, 0.0f));
         // Set the color of the pixel to black if the ray misses.
         if (features.extra.enableEnvironmentMapping) {
-            return hitInfo.material.kd;
+            return computeLightContribution(scene, bvh, features, ray, hitInfo);
         } else {
             return glm::vec3(0.0f);
         }
