@@ -33,7 +33,9 @@ std::pair<std::pair<float,float>, int> cubeMapLookUp(float x, float y, float z)
     int isYPositive = y > 0 ? 1 : 0;
     int isZPositive = z > 0 ? 1 : 0;
 
-    float maxAxis, uc, vc;
+    float maxAxis = 0.0f;
+    float uc = 0.0f;
+    float vc = 0.0f;
 
     // POSITIVE X
     if (isXPositive && absX >= absY && absX >= absZ) {
@@ -97,7 +99,7 @@ std::pair<std::pair<float,float>, int> cubeMapLookUp(float x, float y, float z)
     return {{ u, v }, index};
 }
 
-glm::vec3 environmentMapping(const std::vector<Image>& images,const HitInfo& hitInfo,
+glm::vec3 environmentMapping(const std::vector<Image>& images,
         const Ray& ray, const Features& features)
 {  
     std::pair<std::pair<float, float>, int> result = cubeMapLookUp(ray.direction.x, ray.direction.y, ray.direction.z);

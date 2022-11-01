@@ -26,7 +26,7 @@ glm::vec3 getFinalColor(const Scene& scene, const BvhInterface& bvh, Ray ray, co
 
         Ray reflection = computeReflectionRay(ray, hitInfo);
         if (features.extra.enableEnvironmentMapping) {
-            hitInfo.material.kd = environmentMapping(image, hitInfo, reflection, features);
+            hitInfo.material.kd = environmentMapping(image, reflection, features);
         }
 
         glm::vec3 Lo = computeLightContribution(scene, bvh, features, ray, hitInfo);
@@ -57,7 +57,7 @@ glm::vec3 getFinalColor(const Scene& scene, const BvhInterface& bvh, Ray ray, co
         // Set the color of the pixel to black if the ray misses.
         if (features.extra.enableEnvironmentMapping) {
 
-            return environmentMapping(image, hitInfo, ray, features);
+            return environmentMapping(image, ray, features);
         } else {
             return glm::vec3(0.0f);
         }
