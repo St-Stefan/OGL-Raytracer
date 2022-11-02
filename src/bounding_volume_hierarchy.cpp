@@ -266,8 +266,9 @@ bool BoundingVolumeHierarchy::intersect(Ray& ray, HitInfo& hitInfo, const Featur
                     
                     hitInfo.barycentricCoord = computeBarycentricCoord(v0.position,
                         v1.position, v2.position, ray.origin + ray.t * ray.direction); //update the barycentric coordinate of hitInfo
-                    hitInfo.texCoord = interpolateTexCoord(v0.texCoord, v1.texCoord,  //update the texture coordinate of hitInfo
-                        v2.texCoord, hitInfo.barycentricCoord);
+                    if (features.enableTextureMapping)
+                        hitInfo.texCoord = interpolateTexCoord(v0.texCoord, v1.texCoord,  //update the texture coordinate of hitInfo
+                            v2.texCoord, hitInfo.barycentricCoord);
                     
                     //if the normal interpolation flag enables, we update the normal of hitInfo equal to the interpolated normal. If not, we compute the cross product of vector v0->v1 and v0->v2
                     if (features.enableNormalInterp) {
