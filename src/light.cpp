@@ -65,7 +65,7 @@ void sampleParallelogramLight(const ParallelogramLight& parallelogramLight, glm:
 float testVisibilityLightSample(const glm::vec3& samplePos, const glm::vec3& debugColor, const BvhInterface& bvh, const Features& features, Ray ray, HitInfo hitInfo)
 {
 
-    float offset = 0.1; //removes shadow acne
+    float offset = 0.001; //removes shadow acne
     glm::vec3 intersectionPoint = ray.origin + ray.direction * ray.t;
     glm::vec3 rayDir = samplePos - intersectionPoint;
     Ray lightTest;
@@ -77,11 +77,11 @@ float testVisibilityLightSample(const glm::vec3& samplePos, const glm::vec3& deb
 
     if (dot(hitInfo.normal, lightTest.direction) * dot(hitInfo.normal, -ray.direction)<0)   //check if view ray and shadow ray are on the same side
         shadow = true;
-    bvh.intersect(lightTest, lightHitInfo, features);
-    //if (bvh.intersect(lightTest, lightHitInfo, features)) {     //if there is an intersection regard point as in shadow
+
+    if (bvh.intersect(lightTest, lightHitInfo, features)) {     //if there is an intersection regard point as in shadow
         if (lightTest.t < glm::length(rayDir) - offset)         //subtract the offset from the final length
         shadow = true;
-    //}
+    }
 
     if (shadow) {
         drawRay(lightTest, glm::vec3(0, 0, 1)); // show shadow ray in blue
