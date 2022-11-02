@@ -65,23 +65,23 @@ void sampleParallelogramLight(const ParallelogramLight& parallelogramLight, glm:
 float testVisibilityLightSample(const glm::vec3& samplePos, const glm::vec3& debugColor, const BvhInterface& bvh, const Features& features, Ray ray, HitInfo hitInfo)
 {
 
-    float offset = 0.001; //removes shadow acne
+    float offset = 0.1; //removes shadow acne
     glm::vec3 intersectionPoint = ray.origin + ray.direction * ray.t;
     glm::vec3 rayDir = samplePos - intersectionPoint;
-    Ray lightTest {glm::normalize(rayDir),intersectionPoint};
+    Ray lightTest;
     lightTest.direction = glm::normalize(rayDir);
     lightTest.origin = intersectionPoint+offset*lightTest.direction;
-    lightTest.t = glm::length(rayDir);
+    //lightTest.t = glm::length(rayDir);
     HitInfo lightHitInfo;
     float shadow = false;
 
     if (dot(hitInfo.normal, lightTest.direction) * dot(hitInfo.normal, -ray.direction)<0)   //check if view ray and shadow ray are on the same side
         shadow = true;
-
-    if (bvh.intersect(lightTest, lightHitInfo, features)) {     //if there is an intersection regard point as in shadow
+    bvh.intersect(lightTest, lightHitInfo, features);
+    //if (bvh.intersect(lightTest, lightHitInfo, features)) {     //if there is an intersection regard point as in shadow
         if (lightTest.t < glm::length(rayDir) - offset)         //subtract the offset from the final length
         shadow = true;
-    }
+    //}
 
     if (shadow) {
         drawRay(lightTest, glm::vec3(0, 0, 1)); // show shadow ray in blue
@@ -128,7 +128,7 @@ float testVisibilityLightSample(const glm::vec3& samplePos, const glm::vec3& deb
 // loadScene function in scene.cpp). Custom lights will not be visible in rasterization view.
 glm::vec3 computeLightContribution(const Scene& scene, const BvhInterface& bvh, const Features& features, Ray ray, HitInfo hitInfo)
 {
-    int samplecount=250;
+    int samplecount=100;
     glm::vec3 lightContribution {0.0f};
     if (features.enableShading) {
         // If shading is enabled, compute the contribution from all lights.

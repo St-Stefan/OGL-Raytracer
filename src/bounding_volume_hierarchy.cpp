@@ -329,9 +329,12 @@ bool BoundingVolumeHierarchy::recursiveTraversal(int nodeIndex, Ray& ray, HitInf
         AxisAlignedBox aabbNode = AxisAlignedBox { nodes[nodeIndex].lowerBound, nodes[nodeIndex].upperBound };
         float tBackup = ray.t;
         if (intersectRayWithShape(aabbNode, ray) ){
+            drawRay(ray);
             ray.t = tBackup;
             hit |= recursiveTraversal(nodes[nodeIndex].trianglesOrNodes[0].first, ray, hitInfo, features);
-            hit |= recursiveTraversal(nodes[nodeIndex].trianglesOrNodes[1].first, ray, hitInfo, features);
+            hit|= recursiveTraversal(nodes[nodeIndex].trianglesOrNodes[1].first, ray, hitInfo, features);
+            if (!hit)
+                ray.t = tBackup;
             return hit;
         } else {
             ray.t = tBackup;
