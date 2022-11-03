@@ -79,7 +79,6 @@ bool BoundingVolumeHierarchy::intersect(Ray& ray, HitInfo& hitInfo, const Featur
                 const auto v2 = mesh.vertices[tri[2]];
                 if (intersectRayWithTriangle(v0.position, v1.position, v2.position, ray, hitInfo)) {
 
-                    hitInfo.vertices = { v0, v1, v2 }; //store the vertices in hitInfo 
                     
                     hitInfo.barycentricCoord = computeBarycentricCoord(v0.position,
                         v1.position, v2.position, ray.origin + ray.t * ray.direction); //update the barycentric coordinate of hitInfo

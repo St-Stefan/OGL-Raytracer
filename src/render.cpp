@@ -7,6 +7,7 @@
 #include <omp.h>
 #endif
 
+int depth = 5;
 //Implementing the recursive ray-tracer 
 //Source: Chapter 4.8, Fundamentals of Computer Graphics, Fourth Edition.
 glm::vec3 getFinalColor(const Scene& scene, const BvhInterface& bvh, Ray ray, const Features& features, int rayDepth)
@@ -15,26 +16,28 @@ glm::vec3 getFinalColor(const Scene& scene, const BvhInterface& bvh, Ray ray, co
     if (bvh.intersect(ray, hitInfo, features)) {
 
         glm::vec3 Lo = computeLightContribution(scene, bvh, features, ray, hitInfo);
+        Ray reflection = computeReflectionRay(ray, hitInfo);
+        drawRay(ray, Lo);
 
         if (features.enableRecursive) {
-            Ray reflection = computeReflectionRay(ray, hitInfo);
-            if (rayDepth < 10 && hitInfo.material.ks != glm::vec3{ 0.0f }) {
-                Lo += hitInfo.material.ks * getFinalColor(scene, bvh, reflection, features, rayDepth + 1);
+         
+            if (rayDepth >= depth || hitInfo.material.ks == glm::vec3{ 0.0 }) {
+                return Lo;
             }
+
+            //1/shininess
+            //empty vector color 
+            // for loop 
+            //orthornomal basis 
+            // epsilon, epsilon dash 
+            //divide by number of sample 
+
+            return Lo += hitInfo.material.ks * getFinalColor(scene, bvh, reflection, features, rayDepth + 1);
         }
-        //if normal interpolation flag enables, we draw normal at 3 vertices and the interpolated normal.    
-        if (features.enableNormalInterp) {
-            drawRay(Ray { hitInfo.vertices[0].position, hitInfo.vertices[0].normal, 2 }, glm::vec3 { 1.0f, 0.0f, 0.0f });
-            drawRay(Ray { hitInfo.vertices[1].position, hitInfo.vertices[1].normal, 2 }, glm::vec3 { 1.0f, 0.0f, 0.0f });
-            drawRay(Ray { hitInfo.vertices[2].position, hitInfo.vertices[2].normal, 2 }, glm::vec3 { 1.0f, 0.0f, 0.0f });
-            drawRay(Ray { ray.origin + ray.t * ray.direction,
-                      hitInfo.normal, 2 },
-             glm::vec3 { 0.0f, 1.0f, 0.0f });
-        }
+     
 
 
         // Visual Debug: Draw a ray with a color which is the returned value from computeLightContribution
-        drawRay(ray, Lo);
   
         // Set the color of the pixel to white if the ray hits.
         return Lo;

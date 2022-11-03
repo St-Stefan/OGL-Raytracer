@@ -154,6 +154,12 @@ int main(int argc, char** argv)
             }
             ImGui::Separator();
 
+            if (ImGui::TreeNode("Recursive Raytracer Parameter")) {
+                ImGui::SliderInt("rayDepth", &depth, 1, 10);
+                ImGui::TreePop();
+            }
+
+            ImGui::Separator();
             if (ImGui::TreeNode("Camera(read only)")) {
                 auto lookAt = camera.lookAt();
                 auto position = camera.position();
