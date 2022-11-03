@@ -24,7 +24,6 @@ const glm::vec3 computeShading(const glm::vec3& lightPosition, const glm::vec3& 
           diffuseTerm = lightColor
               * hitInfo.material.kd
               * glm::dot(normal, directionOfIncomingRay);
-           
         }
 
         glm::vec3 specularTerm;
