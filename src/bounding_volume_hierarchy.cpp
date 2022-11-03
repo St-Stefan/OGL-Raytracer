@@ -280,6 +280,17 @@ bool BoundingVolumeHierarchy::intersect(Ray& ray, HitInfo& hitInfo, const Featur
                 }
             }
         }
+
+        if (features.enableTextureMapping) {
+            if (hitInfo.material.kdTexture) {
+                hitInfo.material.kd = acquireTexel(*hitInfo.material.kdTexture.get(), hitInfo.texCoord, features);
+            }
+        }
+        if (features.extra.enableBilinearTextureFiltering) {
+            if (hitInfo.material.kdTexture) {
+                hitInfo.material.kd = acquireTexel(*hitInfo.material.kdTexture.get(), hitInfo.texCoord, features);
+            }
+        }
         
         // Intersect with spheres.
         for (const auto& sphere : m_pScene->spheres)
