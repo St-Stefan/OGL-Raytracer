@@ -8,28 +8,46 @@
 #endif
 
 int depth = 5;
-const int numRays = 8; 
+const int numRays = 15; 
 //Implementing the recursive ray-tracer 
 //Source: Chapter 4.8, Fundamentals of Computer Graphics, Fourth Edition.
 glm::vec3 getFinalColor(const Scene& scene, const BvhInterface& bvh, Ray ray, const Features& features, int rayDepth)
 {
     HitInfo hitInfo;
     if (bvh.intersect(ray, hitInfo, features)) {
-
         glm::vec3 Lo = computeLightContribution(scene, bvh, features, ray, hitInfo);
-        Ray reflection = computeReflectionRay(ray, hitInfo);
+
         drawRay(ray, Lo);
 
         if (features.enableRecursive) {
-            if (rayDepth >= depth || hitInfo.material.ks == glm::vec3{ 0.0 }) {
+          if (rayDepth >= depth || hitInfo.material.ks == glm::vec3 { 0.0f }) {
                 return Lo;
-            }
-           
-            if (features.extra.enableGlossyReflection) {
-                glm::vec3 color = glossyReflection(scene, bvh, reflection,
-                    features, rayDepth, hitInfo,
-                    numRays);
-                return Lo + hitInfo.material.ks * color;
+          } 
+          
+          Ray reflection = computeReflectionRay(ray, hitInfo);
+         
+          if (features.extra.enableGlossyReflection) {
+                Ray reflection = computeReflectionRay(ray, hitInfo);
+                
+                glm::vec3 color { 0.0f };
+                auto W = glm::abs(hitInfo.normal.x) > 0.99 ? glm::vec3 { 0, 1, 0 } : glm::vec3 { 1, 0, 0 };
+                glm::vec3 u_vector = glm::normalize(glm::cross(hitInfo.normal, W));
+                glm::vec3 v_vector = glm::normalize(glm::cross(hitInfo.normal, u_vector));
+
+                for (int i = 0; i < numRays; i++) {
+                    for (int i = 0; i < numRays; i++) {
+                        float u = -1 / (2.0f * hitInfo.material.shininess) + (float)std::rand() / RAND_MAX * 1 / hitInfo.material.shininess;
+                        float v = -1 / (2.0f * hitInfo.material.shininess) + (float)std::rand() / RAND_MAX * 1 / hitInfo.material.shininess;
+
+                        glm::vec3 r_dash = reflection.direction + u * u_vector + v * v_vector;
+
+                        float weight = glm::pow(glm::dot(reflection.direction, glm::normalize(r_dash)), hitInfo.material.shininess);
+
+                        color += getFinalColor(scene, bvh, Ray { reflection.origin, r_dash }, features, rayDepth + 1) * weight;
+                    }
+                }
+                color /= (numRays*numRays);
+                return Lo += hitInfo.material.ks * color;
             }
 
             return Lo += hitInfo.material.ks * getFinalColor(scene, bvh, reflection, features, rayDepth + 1);
@@ -47,34 +65,6 @@ glm::vec3 getFinalColor(const Scene& scene, const BvhInterface& bvh, Ray ray, co
     }
 }
 
-
-glm::vec3 glossyReflection(const Scene& scene, const BvhInterface& bvh, Ray ray, const Features& features, int rayDepth, HitInfo hitInfo, int numRays)
-{
-    float a = 1.0f / hitInfo.material.shininess;
-    glm::vec3 color { 0.0f };
-    glm::vec3 w = glm::abs(hitInfo.normal.x) > 0.99 ? glm::vec3(0, 1, 0) : glm::vec3(1, 0, 0);
-    
-    glm::vec3 u_vector = glm::normalize(glm::cross(hitInfo.normal, w));
-    glm::vec3 v_vector = glm::normalize(glm::cross(hitInfo.normal, u_vector));
-
-    for (int i = 0; i < numRays; i++) {
-        for (int j = 0; j < numRays; j++) {
-            float epsilon = std::rand() / RAND_MAX;
-            float epsilon_dash = std::rand() / RAND_MAX;
-
-            float u = -a / 2 + epsilon * a;
-            float v = -a / 2 + epsilon_dash * a;
-
-            glm::vec3 r_dash = ray.direction + u_vector * u + v_vector * v;
-
-            float weight = glm::pow(glm::dot(glm::normalize(ray.direction), glm::normalize(r_dash)), hitInfo.material.shininess);
-
-            color += getFinalColor(scene, bvh ,Ray {ray.origin, r_dash}, features, rayDepth + 1);
-        }
-    }
-    color /= (numRays * numRays);
-    return color;
-}
 
 void renderRayTracing(const Scene& scene, const Trackball& camera, const BvhInterface& bvh, Screen& screen, const Features& features)
 {
