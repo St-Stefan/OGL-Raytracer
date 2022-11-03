@@ -68,10 +68,10 @@ float testVisibilityLightSample(const glm::vec3& samplePos, const glm::vec3& deb
     float offset = 0.001; //removes shadow acne
     glm::vec3 intersectionPoint = ray.origin + ray.direction * ray.t;
     glm::vec3 rayDir = samplePos - intersectionPoint;
-    Ray lightTest {glm::normalize(rayDir),intersectionPoint};
+    Ray lightTest;
     lightTest.direction = glm::normalize(rayDir);
     lightTest.origin = intersectionPoint+offset*lightTest.direction;
-    lightTest.t = glm::length(rayDir);
+    //lightTest.t = glm::length(rayDir);
     HitInfo lightHitInfo;
     float shadow = false;
 
@@ -128,7 +128,7 @@ float testVisibilityLightSample(const glm::vec3& samplePos, const glm::vec3& deb
 // loadScene function in scene.cpp). Custom lights will not be visible in rasterization view.
 glm::vec3 computeLightContribution(const Scene& scene, const BvhInterface& bvh, const Features& features, Ray ray, HitInfo hitInfo)
 {
-    int samplecount=250;
+    int samplecount=100;
     glm::vec3 lightContribution {0.0f};
     if (features.enableShading) {
         // If shading is enabled, compute the contribution from all lights.

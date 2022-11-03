@@ -13,7 +13,7 @@
 
 uint32_t level;
 uint32_t leaves;
-const uint16_t max_level = 20;
+const uint16_t max_level = 14;
 
 std::vector<Mesh> meshes;
 
@@ -243,17 +243,15 @@ void BoundingVolumeHierarchy::debugDrawLeaf(int leafIdx)
     //std::cout << "aabb nr: " << nodes.size() << '\n';
     // once you find the leaf node, you can use the function drawTriangle (from draw.h) to draw the contained primitives
 }
-
-
-// Return true if something is hit, returns false otherwise. Only find hits if they are closer than t stored
+    // Return true if something is hit, returns false otherwise. Only find hits if they are closer than t stored
 // in the ray and if the intersection is on the correct side of the origin (the new t >= 0). Replace the code
 // by a bounding volume hierarchy acceleration structure as described in the assignment. You can change any
 // file you like, including bounding_volume_hierarchy.h.
 bool BoundingVolumeHierarchy::intersect(Ray& ray, HitInfo& hitInfo, const Features& features) const
 {
+    bool hit = false;
     // If BVH is not enabled, use the naive implementation.
     if (!features.enableAccelStructure) {
-        bool hit = false;
         // Intersect with all triangles of all meshes.
         for (const auto& mesh : m_pScene->meshes) {
             for (const auto& tri : mesh.triangles) {
@@ -266,8 +264,9 @@ bool BoundingVolumeHierarchy::intersect(Ray& ray, HitInfo& hitInfo, const Featur
                     
                     hitInfo.barycentricCoord = computeBarycentricCoord(v0.position,
                         v1.position, v2.position, ray.origin + ray.t * ray.direction); //update the barycentric coordinate of hitInfo
-                    hitInfo.texCoord = interpolateTexCoord(v0.texCoord, v1.texCoord,  //update the texture coordinate of hitInfo
-                        v2.texCoord, hitInfo.barycentricCoord);
+                    if (features.enableTextureMapping)
+                        hitInfo.texCoord = interpolateTexCoord(v0.texCoord, v1.texCoord,  //update the texture coordinate of hitInfo
+                            v2.texCoord, hitInfo.barycentricCoord);
                     
                     //if the normal interpolation flag enables, we update the normal of hitInfo equal to the interpolated normal. If not, we compute the cross product of vector v0->v1 and v0->v2
                     if (features.enableNormalInterp) {
@@ -286,9 +285,60 @@ bool BoundingVolumeHierarchy::intersect(Ray& ray, HitInfo& hitInfo, const Featur
             hit |= intersectRayWithShape(sphere, ray, hitInfo);
         return hit;
     } else {
-        // TODO: implement here the bounding volume hierarchy traversal.
-        // Please note that you should use `features.enableNormalInterp` and `features.enableTextureMapping`
-        // to isolate the code that is only needed for the normal interpolation and texture mapping features.
-        return false;
+        for (const auto& sphere : m_pScene->spheres)
+            hit |= intersectRayWithShape(sphere, ray, hitInfo);
+        return hit || recursiveTraversal(0, ray, hitInfo, features);
+    }   
+
+    
+}
+
+bool BoundingVolumeHierarchy::recursiveTraversal(int nodeIndex, Ray& ray, HitInfo& hitInfo, const Features& features) const
+{
+    bool hit = false;
+    if (nodes[nodeIndex].leaf) {
+        for (std::pair<uint32_t, uint32_t> triangle : nodes[nodeIndex].trianglesOrNodes) {
+            glm::uvec3 tri = meshes[triangle.first].triangles[triangle.second];
+            const auto v0 = meshes[triangle.first].vertices[tri[0]];
+            const auto v1 = meshes[triangle.first].vertices[tri[1]];
+            const auto v2 = meshes[triangle.first].vertices[tri[2]];
+
+            if (intersectRayWithTriangle(v0.position, v1.position, v2.position, ray, hitInfo)) {
+
+                hitInfo.vertices = { v0, v1, v2 }; // store the vertices in hitInfo
+
+                hitInfo.barycentricCoord = computeBarycentricCoord(v0.position,
+                    v1.position, v2.position, ray.origin + ray.t * ray.direction); // update the barycentric coordinate of hitInfo
+                if (features.enableTextureMapping)
+                    hitInfo.texCoord = interpolateTexCoord(v0.texCoord, v1.texCoord, // update the texture coordinate of hitInfo
+                        v2.texCoord, hitInfo.barycentricCoord);
+
+                // if the normal interpolation flag enables, we update the normal of hitInfo equal to the interpolated normal. If not, we compute the cross product of vector v0->v1 and v0->v2
+                if (features.enableNormalInterp) {
+                    hitInfo.normal = interpolateNormal(v0.normal, v1.normal, v2.normal, hitInfo.barycentricCoord);
+                } else {
+                    hitInfo.normal = glm::normalize(glm::cross(v1.position - v0.position, v2.position - v0.position));
+                }
+
+                hitInfo.material = meshes[triangle.first].material;
+                hit = true;
+            }
+        }
+        return hit;
+    } else {
+        AxisAlignedBox aabbNode = AxisAlignedBox { nodes[nodeIndex].lowerBound, nodes[nodeIndex].upperBound };
+        float tBackup = ray.t;
+        if (intersectRayWithShape(aabbNode, ray) ){
+            drawRay(ray);
+            ray.t = tBackup;
+            hit |= recursiveTraversal(nodes[nodeIndex].trianglesOrNodes[0].first, ray, hitInfo, features);
+            hit|= recursiveTraversal(nodes[nodeIndex].trianglesOrNodes[1].first, ray, hitInfo, features);
+            if (!hit)
+                ray.t = tBackup;
+            return hit;
+        } else {
+            ray.t = tBackup;
+            return false;
+        }
     }
 }

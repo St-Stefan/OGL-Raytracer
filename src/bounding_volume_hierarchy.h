@@ -7,6 +7,8 @@
 // Forward declaration.
 struct Scene;
 
+
+
 struct Node {
     glm::vec3 lowerBound, upperBound;
     bool leaf = true;
@@ -29,6 +31,8 @@ public:
 
     // Visual Debug 2: Draw the triangles of the i-th leaf
     void debugDrawLeaf(int leafIdx);
+
+    bool recursiveTraversal(int nodeIndex, Ray& ray, HitInfo& hitInfo, const Features& features) const;
 
     // Return true if something is hit, returns false otherwise.
     // Only find hits if they are closer than t stored in the ray and the intersection
