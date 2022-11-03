@@ -15,5 +15,11 @@ glm::vec3 acquireTexel(const Image& image, const glm::vec2& texCoord, const Feat
     int j = std::roundf(texCoord.y * image.height - 0.5f);
     int index = j * image.width + i;
     return image.pixels[index];
- 
+    if (index >= image.pixels.size()) {
+        index = image.pixels.size() - 1;
+    } 
+    if (index < 0) {
+        index = 0;
+    }
+    return image.pixels[index];
 }

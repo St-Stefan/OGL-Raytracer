@@ -280,6 +280,7 @@ bool BoundingVolumeHierarchy::intersect(Ray& ray, HitInfo& hitInfo, const Featur
                 }
             }
         }
+        
         // Intersect with spheres.
         for (const auto& sphere : m_pScene->spheres)
             hit |= intersectRayWithShape(sphere, ray, hitInfo);
