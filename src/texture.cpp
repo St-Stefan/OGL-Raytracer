@@ -4,7 +4,7 @@
 #include <shading.h>
 
 
-//Source: Chapter 11.1, Fundamentals of Computer Graphics
+// Source: Chapter 11.1, Fundamentals of Computer Graphics
 glm::vec3 acquireTexel(const Image& image, const glm::vec2& texCoord, const Features& features)
 {
     // TODO: implement this function.
@@ -12,12 +12,22 @@ glm::vec3 acquireTexel(const Image& image, const glm::vec2& texCoord, const Feat
     // The pixel are stored in a 1D array of row major order
     // you can convert from position (i,j) to an index using the method seen in the lecture
     // Note, the center of the first pixel is at image coordinates (0.5, 0.5)
-  
+
     int i = std::roundf(texCoord.x * image.width - 0.5f);
-    int j = std::roundf((1-texCoord.y) * image.height - 0.5f);
+    int j = std::roundf((1 - texCoord.y) * image.height - 0.5f);
     int index = j * image.width + i;
-    return image.pixels[index];
- 
+    return acquireTexelClampMode(i, j, image);
+}
+
+glm::vec3 acquireTexelClampMode(int i, int j, const Image& image)
+{
+    if (j * image.width + i >= image.pixels.size()) {
+        return image.pixels[image.pixels.size() - 1];
+    }
+    if (j * image.width + i < 0) {
+        return image.pixels[0];
+    }
+    return image.pixels[j * image.width + i];
 }
 
 std::pair<std::pair<float,float>, int> cubeMapLookUp(float x, float y, float z)

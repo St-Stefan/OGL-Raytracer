@@ -16,3 +16,5 @@ glm::vec3 acquireTexel(const Image& image, const glm::vec2& texCoord, const Feat
 
 glm::vec3 environmentMapping(const std::vector<Image>& images,
 	const Ray& ray,const Features& features);
+
+glm::vec3 acquireTexelClampMode(int i, int j, const Image& image);
