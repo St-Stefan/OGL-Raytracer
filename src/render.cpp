@@ -26,23 +26,15 @@ glm::vec3 getFinalColor(const Scene& scene, const BvhInterface& bvh, Ray ray, co
             }
            
             if (features.extra.enableGlossyReflection) {
-            
-                return Lo + hitInfo.material.ks * glossyReflection(scene, bvh, reflection, 
+                glm::vec3 color = glossyReflection(scene, bvh, reflection,
                     features, rayDepth, hitInfo,
                     numRays);
+                return Lo + hitInfo.material.ks * color;
             }
-            //1/shininess
-            //empty vector color 
-            // for loop 
-            //orthornomal basis 
-            // epsilon, epsilon dash 
-            //divide by number of sample 
 
             return Lo += hitInfo.material.ks * getFinalColor(scene, bvh, reflection, features, rayDepth + 1);
         }
      
-
-
         // Visual Debug: Draw a ray with a color which is the returned value from computeLightContribution
   
         // Set the color of the pixel to white if the ray hits.
@@ -60,13 +52,8 @@ glm::vec3 glossyReflection(const Scene& scene, const BvhInterface& bvh, Ray ray,
 {
     float a = 1.0f / hitInfo.material.shininess;
     glm::vec3 color { 0.0f };
-    glm::vec3 w; 
-    //creating orthornomal basis
-    if (glm::abs(hitInfo.normal.x) > 0.99) {
-        w = glm::vec3(0, 1, 0);
-    } else {
-        w = glm::vec3(1, 0, 0); 
-    }
+    glm::vec3 w = glm::abs(hitInfo.normal.x) > 0.99 ? glm::vec3(0, 1, 0) : glm::vec3(1, 0, 0);
+    
     glm::vec3 u_vector = glm::normalize(glm::cross(hitInfo.normal, w));
     glm::vec3 v_vector = glm::normalize(glm::cross(hitInfo.normal, u_vector));
 
@@ -80,11 +67,9 @@ glm::vec3 glossyReflection(const Scene& scene, const BvhInterface& bvh, Ray ray,
 
             glm::vec3 r_dash = ray.direction + u_vector * u + v_vector * v;
 
-            glm::vec3 r_dash_origin = ray.origin + ray.t * ray.direction;
-
             float weight = glm::pow(glm::dot(glm::normalize(ray.direction), glm::normalize(r_dash)), hitInfo.material.shininess);
 
-            color += getFinalColor(scene, bvh ,Ray {r_dash_origin, r_dash}, features, rayDepth + 1);
+            color += getFinalColor(scene, bvh ,Ray {ray.origin, r_dash}, features, rayDepth + 1);
         }
     }
     color /= (numRays * numRays);
