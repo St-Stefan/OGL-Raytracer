@@ -8,12 +8,12 @@
 #include <omp.h>
 #endif
 
-Image negx = Image("C:/Users/hp/Documents/git-vluong/final_project/data/negx.jpg");
-Image negy = Image("C:/Users/hp/Documents/git-vluong/final_project/data/negy.jpg");
-Image negz = Image("C:/Users/hp/Documents/git-vluong/final_project/data/negz.jpg");
-Image posx = Image("C:/Users/hp/Documents/git-vluong/final_project/data/posx.jpg");
-Image posy = Image("C:/Users/hp/Documents/git-vluong/final_project/data/posy.jpg");
-Image posz = Image("C:/Users/hp/Documents/git-vluong/final_project/data/posz.jpg");
+Image negx = Image("../../../data/negx.jpg");
+Image negy = Image("../../../data/negy.jpg");
+Image negz = Image("../../../data/negz.jpg");
+Image posx = Image("../../../data/posx.jpg");
+Image posy = Image("../../../data/posy.jpg");
+Image posz = Image("../../../data/posz.jpg");
 
 std::vector<Image> image = { posx, negx, posy, negy, posz, negz };
 
