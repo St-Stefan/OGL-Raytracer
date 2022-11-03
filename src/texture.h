@@ -14,3 +14,5 @@ struct Image;
 glm::vec3 acquireTexel(const Image& image, const glm::vec2& texCoord, const Features& features);
 
 glm::vec3 bilinearInterpolation(const Image& image, const glm::vec2& texCoord, const Features& features);
+
+glm::vec3 acquireTexelClampMode(int i, int j, const Image& image);
