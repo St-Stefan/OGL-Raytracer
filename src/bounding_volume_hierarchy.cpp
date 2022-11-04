@@ -299,11 +299,12 @@ bool BoundingVolumeHierarchy::intersect(Ray& ray, HitInfo& hitInfo, const Featur
                                 hitInfo.texCoord, features);
             }
         }
-
-        drawRay(Ray { a.position, a.normal, 2 }, glm::vec3 { 1.0f, 0.0f, 0.0f });
-        drawRay(Ray { b.position, b.normal, 2 }, glm::vec3 { 1.0f, 0.0f, 0.0f });
-        drawRay(Ray { c.position, c.normal, 2 }, glm::vec3 { 1.0f, 0.0f, 0.0f });
-        drawRay(Ray { ray.origin + ray.t*ray.direction, hitInfo.normal, 2 }, glm::vec3 { 0.0f, 1.0f, 0.0f });
+        if (features.enableNormalInterp) {
+            drawRay(Ray { a.position, a.normal, 2 }, glm::vec3 { 1.0f, 0.0f, 0.0f });
+            drawRay(Ray { b.position, b.normal, 2 }, glm::vec3 { 1.0f, 0.0f, 0.0f });
+            drawRay(Ray { c.position, c.normal, 2 }, glm::vec3 { 1.0f, 0.0f, 0.0f });
+            drawRay(Ray { ray.origin + ray.t * ray.direction, hitInfo.normal, 2 }, glm::vec3 { 0.0f, 1.0f, 0.0f });
+        }
         // Intersect with spheres.
         for (const auto& sphere : m_pScene->spheres)
             hit |= intersectRayWithShape(sphere, ray, hitInfo);

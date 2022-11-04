@@ -65,31 +65,35 @@ void sampleParallelogramLight(const ParallelogramLight& parallelogramLight, glm:
 float testVisibilityLightSample(const glm::vec3& samplePos, const glm::vec3& debugColor, const BvhInterface& bvh, const Features& features, Ray ray, HitInfo hitInfo)
 {
 
-    float offset = 0.001; //removes shadow acne
+    float offset = 0.0001; // removes shadow acne
     glm::vec3 intersectionPoint = ray.origin + ray.direction * ray.t;
     glm::vec3 rayDir = samplePos - intersectionPoint;
-    Ray lightTest;
+    Ray lightTest { glm::normalize(rayDir), intersectionPoint };
     lightTest.direction = glm::normalize(rayDir);
-    lightTest.origin = intersectionPoint+offset*lightTest.direction;
-    //lightTest.t = glm::length(rayDir);
+    lightTest.origin = intersectionPoint + offset * lightTest.direction;
     HitInfo lightHitInfo;
     float shadow = false;
+    float otherSide = false;
 
-    if (dot(hitInfo.normal, lightTest.direction) * dot(hitInfo.normal, -ray.direction)<0)   //check if view ray and shadow ray are on the same side
+    if ((dot(hitInfo.normal, lightTest.direction) * dot(hitInfo.normal, -ray.direction) < 0) && hitInfo.material.transparency == 1) { // check if view ray and shadow ray are on the same side
         shadow = true;
-
-    if (bvh.intersect(lightTest, lightHitInfo, features)) {     //if there is an intersection regard point as in shadow
-        if (lightTest.t < glm::length(rayDir) - offset)         //subtract the offset from the final length
-        shadow = true;
+        otherSide = true;
+    }
+    if (bvh.intersect(lightTest, lightHitInfo, features)) { // if there is an intersection regard point as in shadow
+        if (lightTest.t < glm::length(rayDir) - offset) // subtract the offset from the final length
+            shadow = true;
     }
 
     if (shadow) {
         drawRay(lightTest, glm::vec3(0, 0, 1)); // show shadow ray in blue
-        return 0.0;
-    }
-    else {
+        if (features.extra.enableTransparency && lightHitInfo.material.transparency != 1 && otherSide == false) {
+            return (1 - lightHitInfo.material.transparency) * testVisibilityLightSample(samplePos, debugColor, bvh, features, lightTest, lightHitInfo);
+        } else
+            return 0.0;
+    } else {
+        lightTest.t = glm::length(rayDir);
         drawRay(lightTest, debugColor); // otherwise shade ray the same color as the light
-            return 1.0;
+        return 1.0;
     }
 }
 
@@ -128,17 +132,21 @@ float testVisibilityLightSample(const glm::vec3& samplePos, const glm::vec3& deb
 // loadScene function in scene.cpp). Custom lights will not be visible in rasterization view.
 glm::vec3 computeLightContribution(const Scene& scene, const BvhInterface& bvh, const Features& features, Ray ray, HitInfo hitInfo)
 {
-    int samplecount=100;
-    glm::vec3 lightContribution {0.0f};
+    int samplecount = 50;
+    glm::vec3 lightContribution { 0.0f };
     if (features.enableShading) {
         // If shading is enabled, compute the contribution from all lights.
         for (const auto& light : scene.lights) {
-            //only calculate shadows when flag is set to true
+            // only calculate shadows when flag is set to true
             if (std::holds_alternative<PointLight>(light)) {
                 const PointLight pointLight = std::get<PointLight>(light);
-                if (testVisibilityLightSample(pointLight.position, glm::vec3(0, 0, 1), bvh, features, ray, hitInfo) && features.enableHardShadow || !features.enableHardShadow) {
+                // if (testVisibilityLightSample(pointLight.position, glm::vec3(0, 0, 1), bvh, features, ray, hitInfo) && features.enableHardShadow || !features.enableHardShadow) {
+                //    lightContribution += computeShading(pointLight.position, pointLight.color, features, ray, hitInfo);
+                // }
+                if (features.enableHardShadow) {
+                    lightContribution += testVisibilityLightSample(pointLight.position, pointLight.color, bvh, features, ray, hitInfo) * computeShading(pointLight.position, pointLight.color, features, ray, hitInfo);
+                } else
                     lightContribution += computeShading(pointLight.position, pointLight.color, features, ray, hitInfo);
-                    }
             } else if (std::holds_alternative<SegmentLight>(light)) {
                 glm::vec3 segmentLightContribution { 0.0f };
                 const SegmentLight segmentLight = std::get<SegmentLight>(light);
@@ -146,23 +154,25 @@ glm::vec3 computeLightContribution(const Scene& scene, const BvhInterface& bvh, 
                     glm::vec3 positi = { 0, 0, 0 };
                     glm::vec3 color = { 0, 0, 0 };
                     sampleSegmentLight(segmentLight, positi, color);
-                    if (testVisibilityLightSample(positi, glm::vec3(0, 0, 1), bvh, features, ray, hitInfo) && features.enableSoftShadow || !features.enableSoftShadow) {
+                    if (features.enableSoftShadow) {
+                        segmentLightContribution += testVisibilityLightSample(positi, color, bvh, features, ray, hitInfo) * computeShading(positi, color, features, ray, hitInfo);
+                    } else
                         segmentLightContribution += computeShading(positi, color, features, ray, hitInfo);
-                    }
-                    }
+                }
                 segmentLightContribution = segmentLightContribution / float(samplecount);
                 lightContribution += segmentLightContribution;
 
-                } else if (std::holds_alternative<ParallelogramLight>(light)) {
+            } else if (std::holds_alternative<ParallelogramLight>(light)) {
                 const ParallelogramLight parallelogramLight = std::get<ParallelogramLight>(light);
                 glm::vec3 pLightContribution { 0, 0, 0 };
                 for (int i = 0; i < samplecount; i++) {
                     glm::vec3 positi = { 0, 0, 0 };
                     glm::vec3 color = { 0, 0, 0 };
                     sampleParallelogramLight(parallelogramLight, positi, color);
-                    if (testVisibilityLightSample(positi, color, bvh, features, ray, hitInfo) && features.enableSoftShadow || !features.enableSoftShadow) {
+                    if (features.enableSoftShadow) {
+                        pLightContribution += testVisibilityLightSample(positi, color, bvh, features, ray, hitInfo) * computeShading(positi, color, features, ray, hitInfo);
+                    } else
                         pLightContribution += computeShading(positi, color, features, ray, hitInfo);
-                    }
                 }
                 pLightContribution = pLightContribution / float(samplecount);
                 lightContribution += pLightContribution;
