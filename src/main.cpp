@@ -153,7 +153,14 @@ int main(int argc, char** argv)
                 ImGui::Checkbox("Depth of field", &config.features.extra.enableDepthOfField);
             }
             ImGui::Separator();
+            if (ImGui::TreeNode("Bloom Effect Parameter")) {
+                ImGui::SliderFloat("Threshold", &threshold, 0, 1);
+                ImGui::SliderFloat("Scale", &scale, 0, 5);
+                ImGui::SliderInt("Size", &filterSize, 0, 10);
+                ImGui::TreePop();
+            }
 
+            ImGui::Separator();
             if (ImGui::TreeNode("Camera(read only)")) {
                 auto lookAt = camera.lookAt();
                 auto position = camera.position();
