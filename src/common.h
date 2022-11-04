@@ -65,6 +65,7 @@ struct ExtraFeatures {
     float FocusDistance = 2.0f;
     float Aperture = 0.1f;
     int Samples = 50;
+    int samplesPerPixel = 1;
 };
 
 struct Features {

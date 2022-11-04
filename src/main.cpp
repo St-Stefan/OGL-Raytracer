@@ -152,6 +152,13 @@ int main(int argc, char** argv)
                 ImGui::Checkbox("Glossy reflections", &config.features.extra.enableGlossyReflection);
                 ImGui::Checkbox("Transparency", &config.features.extra.enableTransparency);
                 ImGui::Checkbox("Depth of field", &config.features.extra.enableDepthOfField);
+                ImGui::Checkbox("Multiple Rays per pixel", &config.features.extra.enableMultipleRaysPerPixel);
+                if (config.features.extra.enableMultipleRaysPerPixel) {
+                    ImGui::SliderInt("Samples per pixel", &config.features.extra.samplesPerPixel, 1, 1000);
+                } else {
+                    config.features.extra.samplesPerPixel = 1;
+                }
+            
             }
             ImGui::Separator();
 
