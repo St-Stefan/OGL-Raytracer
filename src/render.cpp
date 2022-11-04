@@ -32,7 +32,7 @@ glm::vec3 getFinalColor(const Scene& scene, const BvhInterface& bvh, Ray ray, co
                 glm::vec3 color { 0.0f };
                 auto W = glm::abs(hitInfo.normal.x) > 0.99 ? glm::vec3 { 0, 1, 0 } : glm::vec3 { 1, 0, 0 };
                 glm::vec3 u_vector = glm::normalize(glm::cross(hitInfo.normal, W));
-                glm::vec3 v_vector = glm::normalize(glm::cross(hitInfo.normal, u_vector));
+                glm::vec3 v_vector = glm::normalize(glm::cross(reflection.direction, u_vector));
 
                 for (int i = 0; i < numRays; i++) {
                     for (int i = 0; i < numRays; i++) {
