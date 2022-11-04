@@ -30,6 +30,25 @@ glm::vec3 acquireTexelClampMode(int i, int j, const Image& image)
     return image.pixels[j * image.width + i];
 }
 
+// Source: Chapter 11.3.2, Fundamentals of Computer Graphics
+glm::vec3 bilinearInterpolation(const Image& image, const glm::vec2& texCoord, const Features& features)
+{
+    float uinnerPoint = texCoord.x * image.width - 0.5;
+    float vinnerPoint = (1 - texCoord.y) * image.height - 0.5;
+    float u0 = std::floorf(uinnerPoint);
+    float u1 = u0 + 1;
+    float v0 = std::floorf(vinnerPoint);
+    float v1 = v0 + 1;
+    float alphaU = (u1 - uinnerPoint);
+    float betaU = 1 - alphaU;
+    float alphaV = (v1 - vinnerPoint);
+    float betaV = 1 - alphaV;
+    return alphaU * alphaV * acquireTexelClampMode(u0, v0, image)
+        + alphaU * betaV * acquireTexelClampMode(u0, v1, image)
+        + betaU * alphaV * acquireTexelClampMode(u1, v0, image)
+        + betaU * betaV * acquireTexelClampMode(u1, v1, image);
+}
+
 std::pair<std::pair<float,float>, int> cubeMapLookUp(float x_direction, float y_direction, float z_direction)
 {
     float absolute_x = std::abs(x_direction);

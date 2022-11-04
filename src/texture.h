@@ -14,7 +14,9 @@ struct Image;
 // Given an image and a texture coordinate, return the corresponding texel.
 glm::vec3 acquireTexel(const Image& image, const glm::vec2& texCoord, const Features& features);
 
-glm::vec3 environmentMapping(const std::vector<Image>& images,
-	const Ray& ray,const Features& features);
+glm::vec3 bilinearInterpolation(const Image& image, const glm::vec2& texCoord, const Features& features);
 
 glm::vec3 acquireTexelClampMode(int i, int j, const Image& image);
+
+glm::vec3 environmentMapping(const std::vector<Image>& images,
+    const Ray& ray, const Features& features);
