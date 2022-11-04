@@ -21,26 +21,9 @@ const glm::vec3 computeShading(const glm::vec3& lightPosition, const glm::vec3& 
         if (glm::dot(normal, directionOfIncomingRay) < 0) {
             diffuseTerm = glm::vec3 { 0.0f };
         } else {
-            if (features.enableTextureMapping) {
-                diffuseTerm = lightColor
-                    * acquireTexel(*hitInfo.material.kdTexture.get(), hitInfo.texCoord, features) // Based on the book Fundamentals of Computer Graphics, chapter 11.1
-                                                                                                  //, we will replace the value Kd = acquireTexel(...)  
-                    * glm::dot(normal, directionOfIncomingRay);
-            } 
-                
-
-            else if (features.extra.enableBilinearTextureFiltering) {
-                diffuseTerm = lightColor
-                    * bilinearInterpolation(*hitInfo.material.kdTexture.get(), hitInfo.texCoord, features)
-                    *glm::dot(normal, directionOfIncomingRay); 
-            }
-
-            else {
-                diffuseTerm = lightColor
-                    * hitInfo.material.kd
-                    * glm::dot(normal, directionOfIncomingRay);
-            
-            }
+          diffuseTerm = lightColor
+              * hitInfo.material.kd
+              * glm::dot(normal, directionOfIncomingRay);
         }
 
         glm::vec3 specularTerm;
@@ -55,9 +38,7 @@ const glm::vec3 computeShading(const glm::vec3& lightPosition, const glm::vec3& 
 
         return diffuseTerm + specularTerm;
     } else {
-        if (features.enableShading) {
-            return acquireTexel(*hitInfo.material.kdTexture.get(), hitInfo.texCoord, features);
-        }
+      
         return hitInfo.material.kd;
     }
 }
