@@ -53,12 +53,13 @@ glm::vec3 getFinalColor(const Scene& scene, const BvhInterface& bvh, Ray ray, co
 
     } else {
         // Draw a red debug ray if the ray missed.
-        drawRay(ray, glm::vec3(1.0f, 0.0f, 0.0f));
         // Set the color of the pixel to black if the ray misses.
         if (features.extra.enableEnvironmentMapping) {
-
-            return environmentMapping(image, ray, features);
+            glm::vec3 k_d = environmentMapping(image, ray, features);
+            drawRay(ray, k_d);
+            return k_d;
         } else {
+            drawRay(ray, glm::vec3(1.0f, 0.0f, 0.0f));
             return glm::vec3(0.0f);
         }
     }
