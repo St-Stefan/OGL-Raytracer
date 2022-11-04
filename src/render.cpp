@@ -37,36 +37,48 @@ glm::vec3 getFinalColor(const Scene& scene, const BvhInterface& bvh, Ray ray, co
 
         if (features.enableRecursive) {
           if (rayDepth >= depth || hitInfo.material.ks == glm::vec3 { 0.0f }) {
-                return Lo;
+               
           } 
-          
-          Ray reflection = computeReflectionRay(ray, hitInfo);
-         
-          if (features.extra.enableGlossyReflection) {
-                Ray reflection = computeReflectionRay(ray, hitInfo);
-                
-                glm::vec3 color { 0.0f };
-                auto W = glm::abs(hitInfo.normal.x) > 0.99 ? glm::vec3 { 0, 1, 0 } : glm::vec3 { 1, 0, 0 };
-                glm::vec3 u_vector = glm::normalize(glm::cross(hitInfo.normal, W));
-                glm::vec3 v_vector = glm::normalize(glm::cross(reflection.direction, u_vector));
+          else {
+              Ray reflection = computeReflectionRay(ray, hitInfo);
 
-                for (int i = 0; i < numRays; i++) {
-                    for (int i = 0; i < numRays; i++) {
-                        float u = -1 / (2.0f * hitInfo.material.shininess) + (float)std::rand() / RAND_MAX * 1 / hitInfo.material.shininess;
-                        float v = -1 / (2.0f * hitInfo.material.shininess) + (float)std::rand() / RAND_MAX * 1 / hitInfo.material.shininess;
+              if (features.extra.enableGlossyReflection) {
+                  Ray reflection = computeReflectionRay(ray, hitInfo);
 
-                        glm::vec3 r_dash = reflection.direction + u * u_vector + v * v_vector;
+                  glm::vec3 color { 0.0f };
+                  auto W = glm::abs(hitInfo.normal.x) > 0.99 ? glm::vec3 { 0, 1, 0 } : glm::vec3 { 1, 0, 0 };
+                  glm::vec3 u_vector = glm::normalize(glm::cross(hitInfo.normal, W));
+                  glm::vec3 v_vector = glm::normalize(glm::cross(reflection.direction, u_vector));
 
-                        float weight = glm::pow(glm::dot(reflection.direction, glm::normalize(r_dash)), hitInfo.material.shininess);
+                  for (int i = 0; i < numRays; i++) {
+                      for (int i = 0; i < numRays; i++) {
+                          float u = -1 / (2.0f * hitInfo.material.shininess) + (float)std::rand() / RAND_MAX * 1 / hitInfo.material.shininess;
+                          float v = -1 / (2.0f * hitInfo.material.shininess) + (float)std::rand() / RAND_MAX * 1 / hitInfo.material.shininess;
 
-                        color += getFinalColor(scene, bvh, Ray { reflection.origin, r_dash }, features, rayDepth + 1) * weight;
-                    }
-                }
-                color /= (numRays*numRays);
-                return Lo += hitInfo.material.ks * color;
+                          glm::vec3 r_dash = reflection.direction + u * u_vector + v * v_vector;
+
+                          float weight = glm::pow(glm::dot(reflection.direction, glm::normalize(r_dash)), hitInfo.material.shininess);
+
+                          color += getFinalColor(scene, bvh, Ray { reflection.origin, r_dash }, features, rayDepth + 1) * weight;
+                      }
+                  }
+                  color /= (numRays * numRays);
+                  return Lo += hitInfo.material.ks * color;
+              }
+
+              Lo += hitInfo.material.ks * getFinalColor(scene, bvh, reflection, features, rayDepth + 1);
+          }
+        }
+
+
+        if (features.extra.enableTransparency) {
+            float offset = 0.001f; // offset to remove acne from transparent surface
+            Ray reflection;
+            reflection.direction = ray.direction; // the new ray goes through the surface, in the same direction
+            reflection.origin = ray.origin + ray.direction * ray.t + offset * ray.direction; // offset is added to the origin of the new ray
+            if (rayDepth < 10 && hitInfo.material.transparency != 1) { // check to make sure ray does not pass through opaque materials
+                Lo = hitInfo.material.transparency * Lo + (1 - hitInfo.material.transparency) * getFinalColor(scene, bvh, reflection, features, rayDepth + 1);
             }
-
-            return Lo += hitInfo.material.ks * getFinalColor(scene, bvh, reflection, features, rayDepth + 1);
         }
      
         // Visual Debug: Draw a ray with a color which is the returned value from computeLightContribution
