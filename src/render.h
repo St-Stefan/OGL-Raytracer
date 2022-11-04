@@ -15,6 +15,10 @@ struct Features;
 
 extern int depth;
 
+extern float scale;
+extern int filterSize;
+extern float threshold;
+
 // Main rendering function.
 void renderRayTracing(const Scene& scene, const Trackball& camera, const BvhInterface& bvh, Screen& screen, const Features& features);
 

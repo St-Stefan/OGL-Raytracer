@@ -7,6 +7,15 @@
 #include <omp.h>
 #endif
 
+Image negx = Image("../../../data/negx.jpg");
+Image negy = Image("../../../data/negy.jpg");
+Image negz = Image("../../../data/negz.jpg");
+Image posx = Image("../../../data/posx.jpg");
+Image posy = Image("../../../data/posy.jpg");
+Image posz = Image("../../../data/posz.jpg");
+
+std::vector<Image> image = { posx, negx, posy, negy, posz, negz };
+
 int depth = 5;
 const int numRays = 15; 
 //Implementing the recursive ray-tracer 
@@ -18,6 +27,12 @@ glm::vec3 getFinalColor(const Scene& scene, const BvhInterface& bvh, Ray ray, co
         glm::vec3 Lo = computeLightContribution(scene, bvh, features, ray, hitInfo);
 
         drawRay(ray, Lo);
+
+         Ray reflection = computeReflectionRay(ray, hitInfo);
+        if (features.extra.enableEnvironmentMapping) {
+            hitInfo.material.kd = environmentMapping(image, reflection, features);
+        }
+
 
         if (features.enableRecursive) {
           if (rayDepth >= depth || hitInfo.material.ks == glm::vec3 { 0.0f }) {
