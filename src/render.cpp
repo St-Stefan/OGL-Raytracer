@@ -4,6 +4,8 @@
 #include "screen.h"
 #include <framework/trackball.h>
 #include "texture.h"
+#include <math.h>
+#include <numbers>
 #ifdef NDEBUG
 #include <omp.h>
 #endif
@@ -203,9 +205,27 @@ void renderRayTracing(const Scene& scene, const Trackball& camera, const BvhInte
             if (features.extra.enableDepthOfField) {
                 pixelColor = Aux(camera, cameraRay, bvh, features, scene, screen);
                 screen.setPixel(x, y, pixelColor);
+            } else if (features.extra.enableMultipleRaysPerPixel) {
+                glm::vec3 colorNotDivided = glm::vec3 { 0.f };
+                colorNotDivided += getFinalColor(scene, bvh, cameraRay, features);
+                if (features.extra.enableMultipleRaysPerPixel) {
+                    int samplesHere = features.extra.samplesPerPixel;
+                    for (int i = 1; i < samplesHere; ++i) {
+                        float angleInRadians = 2.f * std::numbers::pi_v<float> * rand() / (float)RAND_MAX;
+                        float r = 1.f / float(windowResolution.x * 2) * 2.f * rand() / (float)RAND_MAX;
+                        glm::vec2 offset = glm::vec2 { std::cos(angleInRadians) * r, std::sin(angleInRadians) * r };
+                        glm::vec2 localPixelPos = normalizedPixelPos + offset;
+                        const Ray cameraRay1 = camera.generateRay(localPixelPos);
+                        colorNotDivided += getFinalColor(scene, bvh, cameraRay1, features);
+                    }
+
+                    screen.setPixel(x, y, colorNotDivided / float(samplesHere));
+                } else {
+                    screen.setPixel(x, y, colorNotDivided);
+                }
             } else {
                 pixelColor = getFinalColor(scene, bvh, cameraRay, features);
-                screen.setPixel(x, y, pixelColor);
+                    screen.setPixel(x, y, pixelColor);
             }
         }
     }
