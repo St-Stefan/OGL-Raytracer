@@ -18,7 +18,7 @@ Image posz = Image("../../../data/posz.jpg");
 std::vector<Image> image = { posx, negx, posy, negy, posz, negz };
 
 int depth = 5;
-const int numRays = 15; 
+const int numRays = 8; 
 //Implementing the recursive ray-tracer 
 //Source: Chapter 4.8, Fundamentals of Computer Graphics, Fourth Edition.
 glm::vec3 getFinalColor(const Scene& scene, const BvhInterface& bvh, Ray ray, const Features& features, int rayDepth)
@@ -37,7 +37,7 @@ glm::vec3 getFinalColor(const Scene& scene, const BvhInterface& bvh, Ray ray, co
 
         if (features.enableRecursive) {
           if (rayDepth >= depth || hitInfo.material.ks == glm::vec3 { 0.0f }) {
-               
+                return Lo;
           } 
           else {
               Ray reflection = computeReflectionRay(ray, hitInfo);
