@@ -3,6 +3,7 @@
 #include "light.h"
 #include "render.h"
 #include "screen.h"
+#include "render.cpp"
 // Suppress warnings in third-party code.
 #include <framework/disable_all_warnings.h>
 DISABLE_WARNINGS_PUSH()
@@ -172,6 +173,16 @@ int main(int argc, char** argv)
                 ImGui::TreePop();
             }
 
+            if (ImGui::TreeNode("DOF Controls")) {
+                ImGui::SliderInt("Samples", &config.features.extra.Samples, 0, 300);
+                ImGui::SliderFloat("Focus Point Distance", &config.features.extra.FocusDistance, 0.0f, 20.0f);
+                ImGui::SliderFloat("Aperture Size", &config.features.extra.Aperture, 0.0f, 0.5f);
+            }
+
+            if (ImGui::TreeNode("Soft Shadow Controls")) {
+                ImGui::SliderInt("Samples", &config.features.extra.Samples, 0, 300);
+            }
+
             ImGui::Spacing();
             ImGui::Separator();
             if (ImGui::Button("Render to file")) {
@@ -330,7 +341,11 @@ int main(int argc, char** argv)
                     enableDebugDraw = true;
                     glDisable(GL_LIGHTING);
                     glDepthFunc(GL_LEQUAL);
-                    (void)getFinalColor(scene, bvh, *optDebugRay, config.features);
+                    if (config.features.extra.enableDepthOfField) {
+                        (void)Aux(camera, *optDebugRay, bvh, config.features, scene, screen);
+                    } else {
+                        (void)getFinalColor(scene, bvh, *optDebugRay, config.features);
+                    }
                     enableDebugDraw = false;
                 }
                 glPopAttrib();

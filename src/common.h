@@ -62,6 +62,9 @@ struct ExtraFeatures {
     bool enableGlossyReflection = false;
     bool enableTransparency = false;
     bool enableDepthOfField = false;
+    float FocusDistance = 2.0f;
+    float Aperture = 0.1f;
+    int Samples = 50;
 };
 
 struct Features {
