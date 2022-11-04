@@ -29,7 +29,7 @@ void sampleSegmentLight(const SegmentLight& segmentLight, glm::vec3& position, g
     drawRay(tes,glm::vec3(1,1,0));
     
     
-    +
+    //a plus sign was here
 
     position = samplepoint;
     color = glm::vec3(0.0);
