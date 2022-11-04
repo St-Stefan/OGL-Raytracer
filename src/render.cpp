@@ -143,10 +143,6 @@ glm::vec3 boxFilter(int i, int j, int filterSize, Screen& screen, float scale, s
     return result;
 }
 
-float scale = 2.0;
-int filterSize = 8;
-float threshold = 0.6;
-
 void renderRayTracing(const Scene& scene, const Trackball& camera, const BvhInterface& bvh, Screen& screen, const Features& features)
 {
     glm::ivec2 windowResolution = screen.resolution();
@@ -176,7 +172,9 @@ void renderRayTracing(const Scene& scene, const Trackball& camera, const BvhInte
     }
 
     if (features.extra.enableBloomEffect) {
-
+         float scale = 2.0;
+         int filterSize = 8;
+         float threshold = 0.6;
         std::vector<float> kernel = kernelCreation(filterSize);
         for (int y = 0; y < windowResolution.y; y++) {
             for (int x = 0; x != windowResolution.x; x++) {
