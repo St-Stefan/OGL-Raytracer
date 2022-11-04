@@ -31,18 +31,18 @@ glm::vec3 acquireTexelClampMode(int i, int j, const Image& image)
 // Source: Chapter 11.3.2, Fundamentals of Computer Graphics
 glm::vec3 bilinearInterpolation(const Image& image, const glm::vec2& texCoord, const Features& features)
 {
-    float u_p = texCoord.x * image.width - 0.5;
-    float v_p = (1 - texCoord.y) * image.height - 0.5;
-    float iu0 = std::floorf(u_p);
-    float iu1 = iu0 + 1;
-    float iv0 = std::floorf(v_p);
-    float iv1 = iv0 + 1;
-    float a_u = (iu1 - u_p);
-    float b_u = 1 - a_u;
-    float a_v = (iv1 - v_p);
-    float b_v = 1 - a_v;
-    return a_u * a_v * acquireTexelClampMode(iu0, iv0, image)
-        + a_u * b_v * acquireTexelClampMode(iu0, iv1, image)
-        + b_u * a_v * acquireTexelClampMode(iu1, iv0, image)
-        + b_u * b_v * acquireTexelClampMode(iu1, iv1, image);
+    float uinnerPoint = texCoord.x * image.width - 0.5;
+    float vinnerPoint = (1 - texCoord.y) * image.height - 0.5;
+    float u0 = std::floorf(uinnerPoint);
+    float u1 = u0 + 1;
+    float v0 = std::floorf(vinnerPoint);
+    float v1 = v0 + 1;
+    float alphaU = (u1 - uinnerPoint);
+    float betaU = 1 - alphaU;
+    float alphaV = (v1 - vinnerPoint);
+    float betaV = 1 - alphaV;
+    return alphaU * alphaV * acquireTexelClampMode(u0, v0, image)
+        + alphaU * betaV * acquireTexelClampMode(u0, v1, image)
+        + betaU * alphaV * acquireTexelClampMode(u1, v0, image)
+        + betaU * betaV * acquireTexelClampMode(u1, v1, image);
 }
