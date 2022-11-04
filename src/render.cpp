@@ -17,28 +17,60 @@ Image posz = Image("../../../data/posz.jpg");
 
 std::vector<Image> image = { posx, negx, posy, negy, posz, negz };
 
+int depth = 5;
+const int numRays = 15; 
 //Implementing the recursive ray-tracer 
 //Source: Chapter 4.8, Fundamentals of Computer Graphics, Fourth Edition.
 glm::vec3 getFinalColor(const Scene& scene, const BvhInterface& bvh, Ray ray, const Features& features, int rayDepth)
 {
     HitInfo hitInfo;
     if (bvh.intersect(ray, hitInfo, features)) {
+        glm::vec3 Lo = computeLightContribution(scene, bvh, features, ray, hitInfo);
 
-        Ray reflection = computeReflectionRay(ray, hitInfo);
+        drawRay(ray, Lo);
+
+         Ray reflection = computeReflectionRay(ray, hitInfo);
         if (features.extra.enableEnvironmentMapping) {
             hitInfo.material.kd = environmentMapping(image, reflection, features);
         }
 
-        glm::vec3 Lo = computeLightContribution(scene, bvh, features, ray, hitInfo);
 
         if (features.enableRecursive) {
-            if (rayDepth < 10 && hitInfo.material.ks != glm::vec3{ 0.0f }) {
-                Lo += hitInfo.material.ks * getFinalColor(scene, bvh, reflection, features, rayDepth + 1);
-            }
-        }
+          if (rayDepth >= depth || hitInfo.material.ks == glm::vec3 { 0.0f }) {
+                return Lo;
+          } 
+          
+          Ray reflection = computeReflectionRay(ray, hitInfo);
+         
+          if (features.extra.enableGlossyReflection) {
+                Ray reflection = computeReflectionRay(ray, hitInfo);
+                
+                glm::vec3 color { 0.0f };
+                auto W = glm::abs(hitInfo.normal.x) > 0.99 ? glm::vec3 { 0, 1, 0 } : glm::vec3 { 1, 0, 0 };
+                glm::vec3 u_vector = glm::normalize(glm::cross(hitInfo.normal, W));
+                glm::vec3 v_vector = glm::normalize(glm::cross(reflection.direction, u_vector));
 
+                for (int i = 0; i < numRays; i++) {
+                    for (int i = 0; i < numRays; i++) {
+                        float u = -1 / (2.0f * hitInfo.material.shininess) + (float)std::rand() / RAND_MAX * 1 / hitInfo.material.shininess;
+                        float v = -1 / (2.0f * hitInfo.material.shininess) + (float)std::rand() / RAND_MAX * 1 / hitInfo.material.shininess;
+
+                        glm::vec3 r_dash = reflection.direction + u * u_vector + v * v_vector;
+
+                        float weight = glm::pow(glm::dot(reflection.direction, glm::normalize(r_dash)), hitInfo.material.shininess);
+
+                        color += getFinalColor(scene, bvh, Ray { reflection.origin, r_dash }, features, rayDepth + 1) * weight;
+                    }
+                }
+                color /= (numRays*numRays);
+                return Lo += hitInfo.material.ks * color;
+            }
+
+            return Lo += hitInfo.material.ks * getFinalColor(scene, bvh, reflection, features, rayDepth + 1);
+        }
+     
         // Visual Debug: Draw a ray with a color which is the returned value from computeLightContribution
-        drawRay(ray, Lo);
+  
         // Set the color of the pixel to white if the ray hits.
         return Lo;
 
