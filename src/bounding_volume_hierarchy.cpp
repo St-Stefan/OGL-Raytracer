@@ -74,6 +74,9 @@ bool BoundingVolumeHierarchy::intersect(Ray& ray, HitInfo& hitInfo, const Featur
     // If BVH is not enabled, use the naive implementation.
     if (!features.enableAccelStructure) {
         bool hit = false;
+        Vertex a; 
+        Vertex b;
+        Vertex c;
         // Intersect with all triangles of all meshes.
         for (const auto& mesh : m_pScene->meshes) {
             for (const auto& tri : mesh.triangles) {
@@ -81,8 +84,9 @@ bool BoundingVolumeHierarchy::intersect(Ray& ray, HitInfo& hitInfo, const Featur
                 const auto v1 = mesh.vertices[tri[1]];
                 const auto v2 = mesh.vertices[tri[2]];
                 if (intersectRayWithTriangle(v0.position, v1.position, v2.position, ray, hitInfo)) {
-
-                    //hitInfo.vertices = { v0, v1, v2 }; //store the vertices in hitInfo 
+                    a = v0;
+                    b = v1;
+                    c = v2;
                     
                     hitInfo.barycentricCoord = computeBarycentricCoord(v0.position,
                         v1.position, v2.position, ray.origin + ray.t * ray.direction); //update the barycentric coordinate of hitInfo
@@ -101,6 +105,24 @@ bool BoundingVolumeHierarchy::intersect(Ray& ray, HitInfo& hitInfo, const Featur
                 }
             }
         }
+
+          if (features.enableTextureMapping) {
+            if (hitInfo.material.kdTexture) {
+                hitInfo.material.kd = acquireTexel(*hitInfo.material.kdTexture.get(), hitInfo.texCoord, features);
+            }
+        }
+        if (features.extra.enableBilinearTextureFiltering) {
+            if (hitInfo.material.kdTexture) {
+                hitInfo.material.kd = bilinearInterpolation(*hitInfo.material.kdTexture.get(),
+                    hitInfo.texCoord, features);
+            }
+        }
+
+        drawRay(Ray { a.position, a.normal, 2 }, glm::vec3 { 1.0f, 0.0f, 0.0f });
+        drawRay(Ray { b.position, b.normal, 2 }, glm::vec3 { 1.0f, 0.0f, 0.0f });
+        drawRay(Ray { c.position, c.normal, 2 }, glm::vec3 { 1.0f, 0.0f, 0.0f });
+        drawRay(Ray { ray.origin + ray.t * ray.direction, hitInfo.normal, 2 }, glm::vec3 { 0.0f, 1.0f, 0.0f });
+
 
         // Intersect with spheres.
         for (const auto& sphere : m_pScene->spheres)
