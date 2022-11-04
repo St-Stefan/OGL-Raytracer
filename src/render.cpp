@@ -10,15 +10,6 @@
 #include <omp.h>
 #endif
 
-Image negx = Image("../../../data/negx.jpg");
-Image negy = Image("../../../data/negy.jpg");
-Image negz = Image("../../../data/negz.jpg");
-Image posx = Image("../../../data/posx.jpg");
-Image posy = Image("../../../data/posy.jpg");
-Image posz = Image("../../../data/posz.jpg");
-
-std::vector<Image> image = { posx, negx, posy, negy, posz, negz };
-
 int depth = 5;
 const int numRays = 8; 
 //Implementing the recursive ray-tracer 
@@ -32,9 +23,6 @@ glm::vec3 getFinalColor(const Scene& scene, const BvhInterface& bvh, Ray ray, co
         drawRay(ray, Lo);
 
          Ray reflection = computeReflectionRay(ray, hitInfo);
-        if (features.extra.enableEnvironmentMapping) {
-            hitInfo.material.kd = environmentMapping(image, reflection, features);
-        }
 
 
         if (features.enableRecursive) {
@@ -87,14 +75,10 @@ glm::vec3 getFinalColor(const Scene& scene, const BvhInterface& bvh, Ray ray, co
     } else {
         // Draw a red debug ray if the ray missed.
         // Set the color of the pixel to black if the ray misses.
-        if (features.extra.enableEnvironmentMapping) {
-            glm::vec3 k_d = environmentMapping(image, ray, features);
-            drawRay(ray, k_d);
-            return k_d;
-        } else {
-            drawRay(ray, glm::vec3(1.0f, 0.0f, 0.0f));
-            return glm::vec3(0.0f);
-        }
+        
+         drawRay(ray, glm::vec3(1.0f, 0.0f, 0.0f));
+         return glm::vec3(0.0f);
+        
     }
 }
 
