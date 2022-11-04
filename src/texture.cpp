@@ -30,83 +30,77 @@ glm::vec3 acquireTexelClampMode(int i, int j, const Image& image)
     return image.pixels[j * image.width + i];
 }
 
-std::pair<std::pair<float,float>, int> cubeMapLookUp(float x, float y, float z)
+std::pair<std::pair<float,float>, int> cubeMapLookUp(float x_direction, float y_direction, float z_direction)
 {
-    float absX = fabs(x);
-    float absY = fabs(y);
-    float absZ = fabs(z);
+    float absolute_x = std::abs(x_direction);
+    float absolute_y = std::abs(y_direction);
+    float absolute_z = std::abs(z_direction);
     int index = 0; 
     float u = 0.0f; 
     float v = 0.0f;
 
-    int isXPositive = x > 0 ? 1 : 0;
-    int isYPositive = y > 0 ? 1 : 0;
-    int isZPositive = z > 0 ? 1 : 0;
+    int isXPositive = x_direction > 0 ? 1 : 0;
+    int isYPositive = y_direction > 0 ? 1 : 0;
+    int isZPositive = z_direction > 0 ? 1 : 0;
 
-    float maxAxis = 0.0f;
-    float uc = 0.0f;
-    float vc = 0.0f;
+    float axis = 0.0f;
+    float u_coordinate = 0.0f;
+    float v_coordinate = 0.0f;
 
     // POSITIVE X
-    if (isXPositive && absX >= absY && absX >= absZ) {
-        // u (0 to 1) goes from +z to -z
-        // v (0 to 1) goes from -y to +y
-        maxAxis = absX;
-        uc = -z;
-        vc = y;
+    if (isXPositive && absolute_x >= absolute_y && absolute_x >= absolute_z) {
+       
+        axis = absolute_x;
+        u = -z_direction;
+        v = y_direction;
         index = 0;
     }
     // NEGATIVE X
-    if (!isXPositive && absX >= absY && absX >= absZ) {
-        // u (0 to 1) goes from -z to +z
-        // v (0 to 1) goes from -y to +y
-        maxAxis = absX;
-        uc = z;
-        vc = y;
+    if (!isXPositive && absolute_x >= absolute_y && absolute_x >= absolute_z) {
+        
+        axis = absolute_x;
+        u = z_direction;
+        v = y_direction;
         index = 1;
     }
     // POSITIVE Y
-    if (isYPositive && absY >= absX && absY >= absZ) {
-        // u (0 to 1) goes from -x to +x
-        // v (0 to 1) goes from +z to -z
-        maxAxis = absY;
-        uc = x;
-        vc = -z;
+    if (isYPositive && absolute_y >= absolute_x && absolute_y >= absolute_z) {
+        
+        axis = absolute_y;
+        u = x_direction;
+        v = -z_direction;
         index = 2;
     }
     // NEGATIVE Y
-    if (!isYPositive && absY >= absX && absY >= absZ) {
-        // u (0 to 1) goes from -x to +x
-        // v (0 to 1) goes from -z to +z
-        maxAxis = absY;
-        uc = x;
-        vc = z;
+    if (!isYPositive && absolute_y >= absolute_x && absolute_y >= absolute_z) {
+        
+        axis = absolute_y;
+        u = x_direction;
+        v = z_direction;
         index = 3;
     }
     // POSITIVE Z
-    if (isZPositive && absZ >= absX && absZ >= absY) {
-        // u (0 to 1) goes from -x to +x
-        // v (0 to 1) goes from -y to +y
-        maxAxis = absZ;
-        uc = x;
-        vc = y;
+    if (isZPositive && absolute_z >= absolute_x && absolute_z >= absolute_y) {
+        
+        axis = absolute_z;
+        u = x_direction;
+        v = y_direction;
         index = 4;
     }
     // NEGATIVE Z
-    if (!isZPositive && absZ >= absX && absZ >= absY) {
-        // u (0 to 1) goes from +x to -x
-        // v (0 to 1) goes from -y to +y
-        maxAxis = absZ;
-        uc = -x;
-        vc = y;
+    if (!isZPositive && absolute_z >= absolute_x && absolute_z >= absolute_y) {
+       
+        axis = absolute_z;
+        u = -x_direction;
+        v = y_direction;
         index = 5;
     }
 
     // Convert range from -1 to 1 to 0 to 1
-    u = 0.5f * (uc / maxAxis + 1.0f);
-    v = 0.5f * (vc / maxAxis + 1.0f);
+    u_coordinate = 0.5f * (u / axis + 1.0f);
+    v_coordinate = 0.5f * (v / axis + 1.0f);
 
-    return {{ u, v }, index};
+    return {{ u_coordinate, v_coordinate }, index};
 }
 
 glm::vec3 environmentMapping(const std::vector<Image>& images,
