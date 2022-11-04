@@ -140,6 +140,9 @@ void BoundingVolumeHierarchy::createChildren(uint32_t node, uint32_t levelLocal)
 
 }
 
+
+
+
 BoundingVolumeHierarchy::BoundingVolumeHierarchy(Scene* pScene)
     : m_pScene(pScene)
     , nodes(std::vector<Node>())
